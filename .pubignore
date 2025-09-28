@@ -17,5 +17,3 @@ coverage_report/
 # Logs
 *.lock
 *.log
-
-# Keep example/ and LICENSE included in the published package

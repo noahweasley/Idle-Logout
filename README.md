@@ -14,6 +14,8 @@
 A Flutter package for handling automatic user logout after a period of inactivity. Ideal for apps where session security and compliance are important (e.g., banking, healthcare, enterprise apps).
 </p>
 
+[▶️ Watch full demo](demo/Screen%20Recording.mp4)
+
 ---
 
 ## ✨ Features

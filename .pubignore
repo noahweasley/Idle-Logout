@@ -1,0 +1,21 @@
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# Build and tool artifacts
+.dart_tool/
+build/
+.packages
+.pub-cache/
+.pub/
+
+# Coverage and reports
+coverage/
+coverage_report/
+
+# Logs
+*.lock
+*.log
+
+# Keep example/ and LICENSE included in the published package

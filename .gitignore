@@ -29,7 +29,9 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-pubspec.lock
+
+# For packages, ignore root pubspec.lock but keep example/pubspec.lock
+/pubspec.lock
 
 # Web related
 lib/generated_plugin_registrant.dart
@@ -41,4 +43,4 @@ app.*.symbols
 app.*.map.json
 
 # Test related
-coverage
+coverage/

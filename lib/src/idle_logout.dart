@@ -63,7 +63,10 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    debugPrint('Lifecycle changed → $state at ${DateTime.now()}');
+
+    if (kDebugMode) {
+      debugPrint('Lifecycle changed → $state at ${DateTime.now()}');
+    }
 
     if (state == AppLifecycleState.resumed) {
       if (_pausedAt != null) {
@@ -77,7 +80,10 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
           debugPrint('Away > $_pauseThreshold → locking user');
           unawaited(_handleIdle());
         } else {
-          debugPrint('Away < $_pauseThreshold → resume without locking');
+          if (kDebugMode) {
+            debugPrint('Away < $_pauseThreshold → resume without locking');
+          }
+
           _resetTimer();
         }
 
@@ -100,13 +106,19 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.hidden) {
       // Rarely even used, but keep for completeness
       _pausedAt ??= DateTime.now();
-      debugPrint('App hidden at $_pausedAt');
+
+      if (kDebugMode) {
+        debugPrint('App hidden at $_pausedAt');
+      }
     }
   }
 
   @override
   void dispose() {
-    debugPrint('IdleLogout disposed at ${DateTime.now()}');
+    if (kDebugMode) {
+      debugPrint('IdleLogout disposed at ${DateTime.now()}');
+    }
+
     WidgetsBinding.instance.removeObserver(this);
     _idleTimer?.cancel();
     super.dispose();
@@ -150,7 +162,10 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   Future<void> _handleIdle() async {
     if (!mounted) return;
-    debugPrint('Idle handler fired at ${DateTime.now()}');
+
+    if (kDebugMode) {
+      debugPrint('Idle handler fired at ${DateTime.now()}');
+    }
 
     final loggedIn = widget.isLoggedIn();
     final locked = widget.isLockedOut();

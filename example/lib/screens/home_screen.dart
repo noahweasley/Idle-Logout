@@ -8,8 +8,8 @@ class HomeScreen extends StatelessWidget {
     return const Scaffold(
       body: Center(
         child: Text(
-          'Welcome! Click anywhere on the screen on drag finger'
-          ' to stay logged in.',
+          'Welcome! Click anywhere on the screen or drag finger '
+          'across the screen to stay logged in.',
         ),
       ),
     );

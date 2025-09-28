@@ -6,7 +6,7 @@ class OtherScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(child: Text('The should probably be your lock screen')),
+      body: Center(child: Text('This should probably be your lock screen')),
     );
   }
 }

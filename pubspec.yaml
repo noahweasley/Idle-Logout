@@ -1,6 +1,6 @@
 name: idle_logout
 description: A Flutter package for handling idle user logout
-version: 0.1.0+3
+version: 0.1.1
 homepage: https://pub.dev/packages/idle_logout
 repository: https://github.com/noahweasley/idle_logout
 

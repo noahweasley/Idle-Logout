@@ -1,4 +1,4 @@
-## 0.1.0+3
+## 0.1.1
 
 - Add necessary `kDebugMode` where necessary
 - Remove unnecessary main.dart file in library

@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, document_ignores
 import 'package:flutter/material.dart';
 
 void main() {

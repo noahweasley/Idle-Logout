@@ -25,7 +25,9 @@ class MyApp extends StatelessWidget {
           debugPrint('User logged out due to inactivity');
 
           navigatorKey.currentState?.pushReplacement(
-            MaterialPageRoute<void>(builder: (BuildContext context) => const OtherScreen()),
+            MaterialPageRoute<void>(
+              builder: (BuildContext context) => const OtherScreen(),
+            ),
           );
         },
         child: const HomeScreen(),

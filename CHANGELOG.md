@@ -1,3 +1,9 @@
+## 0.1.2
+
+- Add optional `pauseThreshold`; duration after which we consider the app paused for too long
+- Improve Readme and example app
+- Fix app timeout while user typing on keyboard - it is now treated as user interaction
+
 ## 0.1.1
 
 - Add necessary `kDebugMode` where necessary

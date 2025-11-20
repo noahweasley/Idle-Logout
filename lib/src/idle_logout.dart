@@ -1,6 +1,7 @@
 import 'dart:async' show Timer, unawaited;
 
 import 'package:flutter/foundation.dart' show AsyncValueGetter, kDebugMode;
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 /// {@template idle_logout}
@@ -33,31 +34,37 @@ class IdleLogout extends StatefulWidget {
     required this.isLockedOut,
     required this.lockedOutAction,
     required this.timeout,
+    this.pauseThreshold,
     super.key,
   });
 
   /// The widget to watch for activity
   final Widget child;
 
-  /// callback to check if we are logged in
-  final ValueGetter<bool> isLoggedIn;
-
   /// callback to check if we are locked out
   final ValueGetter<bool> isLockedOut;
 
-  /// timeout
-  final Duration timeout;
+  /// callback to check if we are logged in
+  final ValueGetter<bool> isLoggedIn;
 
   /// action to be performed when we are ready to lock-out the user
   final AsyncValueGetter<void> lockedOutAction;
+
+  /// duration after which we consider the app paused for too long,
+  /// default is 30 seconds
+  final Duration? pauseThreshold;
+
+  /// timeout
+  final Duration timeout;
 
   @override
   State<IdleLogout> createState() => _IdleLogoutState();
 }
 
 class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
+  final _focusNode = FocusNode();
   Timer? _idleTimer;
-  final Duration _pauseThreshold = const Duration(seconds: 30);
+  late final Duration _pauseThreshold;
   DateTime? _pausedAt;
 
   @override
@@ -65,7 +72,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
 
     if (kDebugMode) {
-      debugPrint('Lifecycle changed → $state at ${DateTime.now()}');
+      debugPrint('Lifecycle changed; $state at ${DateTime.now()}');
     }
 
     if (state == AppLifecycleState.resumed) {
@@ -77,11 +84,11 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
         }
 
         if (awayFor > _pauseThreshold) {
-          debugPrint('Away > $_pauseThreshold → locking user');
+          debugPrint('Away > $_pauseThreshold; locking user');
           unawaited(_handleIdle());
         } else {
           if (kDebugMode) {
-            debugPrint('Away < $_pauseThreshold → resume without locking');
+            debugPrint('Away < $_pauseThreshold; resume without locking');
           }
 
           _resetTimer();
@@ -121,15 +128,17 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
     WidgetsBinding.instance.removeObserver(this);
     _idleTimer?.cancel();
+    _focusNode.dispose();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
+    _pauseThreshold = widget.pauseThreshold ?? const Duration(seconds: 30);
 
     if (kDebugMode) {
-      debugPrint('IdleLogout initialized, timeout = $widget.timeout');
+      debugPrint('IdleLogout initialized, timeout = ${widget.timeout}');
     }
 
     WidgetsBinding.instance.addObserver(this);
@@ -138,16 +147,21 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerDown: (_) {
-        if (kDebugMode) {
-          debugPrint('User interacted → reset idle timer');
-        }
+    return Focus(
+      autofocus: true,
+      focusNode: _focusNode,
+      onKeyEvent: _onKeyEvent,
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) {
+          if (kDebugMode) {
+            debugPrint('User interacted; reset idle timer');
+          }
 
-        _resetTimer();
-      },
-      child: widget.child,
+          _resetTimer();
+        },
+        child: widget.child,
+      ),
     );
   }
 
@@ -156,7 +170,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     _idleTimer = Timer(widget.timeout, _handleIdle);
 
     if (kDebugMode) {
-      debugPrint('Idle timer started/reset at ${DateTime.now()} for $widget.timeout');
+      debugPrint('Idle timer started/reset at ${DateTime.now()}');
     }
   }
 
@@ -172,7 +186,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
     if (loggedIn && !locked) {
       if (kDebugMode) {
-        debugPrint('User logged in and not locked out → locking now...');
+        debugPrint('User logged in and not locked out; locking now...');
       }
 
       if (mounted) {
@@ -180,8 +194,19 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
       }
     } else {
       if (kDebugMode) {
-        debugPrint('Either no user logged in or already locked → no action');
+        debugPrint('Either no user logged in or already locked; no action');
       }
     }
+  }
+
+  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent) {
+      if (kDebugMode) {
+        debugPrint('Keyboard interaction; reset idle timer');
+      }
+      _resetTimer();
+    }
+
+    return KeyEventResult.ignored;
   }
 }

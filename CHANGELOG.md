@@ -1,3 +1,7 @@
+## 0.1.3
+
+- Fix analyzer issues and add supported platforms
+
 ## 0.1.2
 
 - Add optional `pauseThreshold`; duration after which we consider the app paused for too long

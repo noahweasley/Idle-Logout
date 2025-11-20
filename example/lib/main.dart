@@ -4,7 +4,7 @@ import 'package:idle_logout/idle_logout.dart';
 import '../../screens/home_screen.dart';
 import 'screens/lock_screen.dart';
 
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
   runApp(const MyApp());

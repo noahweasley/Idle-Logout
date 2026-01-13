@@ -1,6 +1,7 @@
 ## 0.1.3+1
 
 - Update documentation to provide more details on usage
+- Reduce package size by removing unwanted files
 
 ## 0.1.3
 

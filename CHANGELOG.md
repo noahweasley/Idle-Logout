@@ -1,3 +1,7 @@
+## 0.1.3+1
+
+- Update documentation to provide more details on usage
+
 ## 0.1.3
 
 - Fix analyzer issues and add supported platforms

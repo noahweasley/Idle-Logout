@@ -1,5 +1,5 @@
 name: idle_logout
-description: A Flutter package that monitors user inactivity and triggers automatic logout. Useful for secure, compliance-driven apps like banking, medical, and enterprise solutions.
+description: Automatic inactivity-based logout for secure Flutter applications.
 version: 0.1.4
 homepage: https://pub.dev/packages/idle_logout
 repository: https://github.com/noahweasley/idle_logout

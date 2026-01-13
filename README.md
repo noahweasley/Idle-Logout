@@ -22,16 +22,16 @@ A Flutter package for handling automatic user logout after a period of inactivit
 
 ---
 
-## ✨ Features
+## Features
 
-- ⏱️ Detects user inactivity.
-- 🚪 Logs out automatically after a configurable timeout.
-- 🔄 Resets the timer on user activity.
-- 🧩 Simple and flexible API.
+* Detects user inactivity.
+* Logs out automatically after a configurable timeout.
+* Resets the timer on user activity.
+* Simple and flexible API.
 
 ---
 
-## 📦 Installation
+## Installation
 
 Add to your project:
 
@@ -43,12 +43,12 @@ Or manually add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  idle_logout: ^0.1.3
+  idle_logout: ^0.1.3+1
 ```
 
 ---
 
-## 🚀 Usage
+## Usage
 
 ### Basic Example
 
@@ -84,17 +84,127 @@ class MyApp extends StatelessWidget {
           ),
         );
       },
-      child: MaterialApp(navigatorKey: navigatorKey, home: const HomeScreen()),
+      child: MaterialApp(
+        navigatorKey: navigatorKey,
+        home: const HomeScreen(),
+      ),
     );
   }
 }
-
-
 ```
 
 ---
 
-## 🧪 Testing
+## API Documentation
+
+### Constructor
+
+```dart
+IdleLogout({
+  required Widget child,
+  required bool Function() isLoggedIn,
+  required bool Function() isLockedOut,
+  required Future<void> Function() lockedOutAction,
+  required Duration timeout,
+  Duration? pauseThreshold,
+})
+```
+
+---
+
+### Parameters
+
+#### `child`
+
+```dart
+Widget child
+```
+
+The widget subtree to monitor for user activity.
+
+This is typically your `MaterialApp`, `CupertinoApp`, or a top‑level page. All pointer and keyboard events within this subtree reset the idle timer.
+
+---
+
+#### `timeout`
+
+```dart
+Duration timeout
+```
+
+The duration of inactivity allowed before the user is considered idle.
+
+* The timer resets on every user interaction (touch, mouse, keyboard).
+* When this duration elapses with no interaction, the idle handler is triggered.
+
+---
+
+#### `pauseThreshold`
+
+```dart
+Duration? pauseThreshold
+```
+
+The maximum amount of time the app may remain in the background before the user is automatically logged out on resume.
+
+* If the app resumes after being paused longer than this duration, `lockedOutAction` is executed immediately.
+* If not provided, this defaults to **30 seconds**.
+
+This helps protect sessions when the app is backgrounded or the device is locked.
+
+---
+
+#### `isLoggedIn`
+
+```dart
+bool Function() isLoggedIn
+```
+
+Determines whether idle monitoring should be active.
+
+* If this returns `false`, idle detection is disabled.
+* Useful for login, onboarding, or public routes.
+
+This callback should be synchronous and inexpensive.
+
+---
+
+#### `isLockedOut`
+
+```dart
+bool Function() isLockedOut
+```
+
+Indicates whether the user is already logged out or locked.
+
+* Prevents multiple executions of `lockedOutAction`.
+* Avoids duplicate navigation or logout calls.
+
+---
+
+#### `lockedOutAction`
+
+```dart
+Future<void> Function() lockedOutAction
+```
+
+The callback executed when the user must be logged out due to inactivity.
+
+Typical responsibilities include:
+
+* Clearing authentication state
+* Revoking tokens
+* Navigating to a login or lock screen
+* Displaying a session‑expired message
+
+This action is executed only if:
+
+* `isLoggedIn()` returns `true`
+* `isLockedOut()` returns `false`
+
+---
+
+## Testing
 
 This package is set up with [Very Good Analysis][very_good_analysis_link] and [Very Good Workflows][very_good_workflows_link].
 
@@ -113,7 +223,7 @@ open coverage/index.html
 
 ---
 
-## 📜 License
+## License
 
 Licensed under the [MIT License][license_link].
 

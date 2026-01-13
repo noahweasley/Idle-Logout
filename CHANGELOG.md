@@ -1,4 +1,4 @@
-## 0.1.3+1
+## 0.1.4
 
 - Update documentation to provide more details on usage
 - Reduce package size by removing unwanted files

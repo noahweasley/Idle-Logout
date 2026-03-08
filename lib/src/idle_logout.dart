@@ -12,8 +12,8 @@ import 'package:flutter/widgets.dart';
 /// ```dart
 /// IdleLogout(
 ///   timeout: const Duration(minutes: 5),
-///   isLoggedIn: () => authService.isLoggedIn,
-///   isLockedOut: () => authService.isLockedOut,
+///   isLoggedIn: authService.isLoggedIn,
+///   isLockedOut: authService.isLockedOut,
 ///   lockedOutAction: () async {
 ///     await authService.logout();
 ///     // For example: navigate to login screen
@@ -42,10 +42,10 @@ class IdleLogout extends StatefulWidget {
   final Widget child;
 
   /// callback to check if we are locked out
-  final ValueGetter<bool> isLockedOut;
+  final AsyncValueGetter<bool> isLockedOut;
 
   /// callback to check if we are logged in
-  final ValueGetter<bool> isLoggedIn;
+  final AsyncValueGetter<bool> isLoggedIn;
 
   /// action to be performed when we are ready to lock-out the user
   final AsyncValueGetter<void> lockedOutAction;
@@ -181,8 +181,8 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
       debugPrint('Idle handler fired at ${DateTime.now()}');
     }
 
-    final loggedIn = widget.isLoggedIn();
-    final locked = widget.isLockedOut();
+    final loggedIn = await widget.isLoggedIn();
+    final locked = await widget.isLockedOut();
 
     if (loggedIn && !locked) {
       if (kDebugMode) {

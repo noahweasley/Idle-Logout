@@ -12,8 +12,8 @@ void main() {
         initializeScreen(tester);
 
         final widget = IdleLogout(
-          isLoggedIn: () => true,
-          isLockedOut: () => false,
+          isLoggedIn: () async => true,
+          isLockedOut: () async => false,
           timeout: const Duration(seconds: 1),
           lockedOutAction: () async {},
           child: const Text('Hello World'),
@@ -32,8 +32,8 @@ void main() {
         var lockedOutCalled = false;
 
         final widget = IdleLogout(
-          isLoggedIn: () => true,
-          isLockedOut: () => false,
+          isLoggedIn: () async => true,
+          isLockedOut: () async => false,
           timeout: const Duration(seconds: 1),
           lockedOutAction: () async {
             lockedOutCalled = true;
@@ -55,8 +55,8 @@ void main() {
           var lockedOutCalled = false;
 
           final widget = IdleLogout(
-            isLoggedIn: () => true,
-            isLockedOut: () => true,
+            isLoggedIn: () async => true,
+            isLockedOut: () async => true,
             timeout: const Duration(seconds: 1),
             lockedOutAction: () async {
               lockedOutCalled = true;

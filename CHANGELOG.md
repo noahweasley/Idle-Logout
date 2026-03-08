@@ -1,3 +1,8 @@
+## 1.0.0
+
+* `isLockedOut()` and  `isLoggedIn()` are now an asynchronus functions, you can still return a result synchronously if you prefer
+* Update documentation
+
 ## 0.1.4
 
 - Update documentation to provide more details on usage

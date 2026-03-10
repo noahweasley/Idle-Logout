@@ -84,7 +84,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
         }
 
         if (awayFor > _pauseThreshold) {
-          debugPrint('Away > $_pauseThreshold; locking user');
+          if (kDebugMode) debugPrint('Away > $_pauseThreshold; locking user');
           unawaited(_handleIdle());
         } else {
           if (kDebugMode) {
@@ -127,7 +127,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     }
 
     WidgetsBinding.instance.removeObserver(this);
-    _idleTimer?.cancel();
+    _stopTimer();
     _focusNode.dispose();
     super.dispose();
   }
@@ -165,6 +165,11 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     );
   }
 
+  void _stopTimer() {
+    _idleTimer?.cancel();
+    _idleTimer = null;
+  }
+
   void _resetTimer() {
     _idleTimer?.cancel();
     _idleTimer = Timer(widget.timeout, _handleIdle);
@@ -189,6 +194,8 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
         debugPrint('User logged in and not locked out; locking now...');
       }
 
+      _stopTimer();
+
       if (mounted) {
         await widget.lockedOutAction();
       }
@@ -204,6 +211,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
       if (kDebugMode) {
         debugPrint('Keyboard interaction; reset idle timer');
       }
+
       _resetTimer();
     }
 

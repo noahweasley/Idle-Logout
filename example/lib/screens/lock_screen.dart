@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:idle_logout_sample/utils.dart';
 import 'home_screen.dart';
 
 class LockScreen extends StatefulWidget {
@@ -9,11 +10,13 @@ class LockScreen extends StatefulWidget {
 }
 
 class _LockScreenState extends State<LockScreen> {
-  final TextEditingController _pinController = TextEditingController();
+  final _pinController = TextEditingController();
   String? _errorText;
 
   void _checkPin() {
     if (_pinController.text == '1234') {
+      LocalStorage.isLockedOut = false;
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),

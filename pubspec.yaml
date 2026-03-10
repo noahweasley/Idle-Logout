@@ -1,6 +1,6 @@
 name: idle_logout
 description: Automatic inactivity-based logout for secure Flutter applications.
-version: 1.0.0
+version: 1.0.0+1
 homepage: https://pub.dev/packages/idle_logout
 repository: https://github.com/noahweasley/idle_logout
 

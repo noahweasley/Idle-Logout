@@ -1,9 +1,10 @@
+// ignore_for_file: public_member_api_docs
+
 import 'package:flutter/material.dart';
 import 'package:idle_logout/idle_logout.dart';
+import 'package:idle_logout_sample/screens/home_screen.dart';
+import 'package:idle_logout_sample/screens/lock_screen.dart';
 import 'package:idle_logout_sample/utils.dart';
-
-import '../../screens/home_screen.dart';
-import 'screens/lock_screen.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 

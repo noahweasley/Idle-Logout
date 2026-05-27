@@ -1,0 +1,12 @@
+{
+  "dart.lineLength": 125,
+  "dart.enableSdkFormatter": true,
+  "[dart]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "editor.defaultFormatter": "Dart-Code.dart-code",
+    "editor.formatOnSave": false
+  },
+  "explorer.excludeGitIgnore": true
+}

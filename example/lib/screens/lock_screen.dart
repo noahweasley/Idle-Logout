@@ -1,6 +1,8 @@
+// ignore_for_file: public_member_api_docs
+
 import 'package:flutter/material.dart';
+import 'package:idle_logout_sample/screens/home_screen.dart';
 import 'package:idle_logout_sample/utils.dart';
-import 'home_screen.dart';
 
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
@@ -19,7 +21,7 @@ class _LockScreenState extends State<LockScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute<HomeScreen>(builder: (_) => const HomeScreen()),
       );
     } else {
       setState(() {

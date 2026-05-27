@@ -1,4 +1,47 @@
-include: package:very_good_analysis/analysis_options.yaml
+include: package:very_good_analysis/analysis_options.6.0.0.yaml
 
 formatter:
   page_width: 125
+
+errors:
+  invalid_annotation_target: ignore
+
+linter:
+  rules:
+    public_member_api_docs: true
+    lines_longer_than_80_chars: false
+    prefer_final_fields: true
+    prefer_single_quotes: true
+    prefer_interpolation_to_compose_strings: true
+    always_use_package_imports: true
+    avoid_print: true
+    no_wildcard_variable_uses: true
+    prefer_const_constructors: true
+    avoid_unused_constructor_parameters: true
+    await_only_futures: true
+    empty_constructor_bodies: true
+    empty_statements: true
+    hash_and_equals: true
+    implementation_imports: true
+    null_closures: true
+    # Disable new vg cli rules start
+    omit_local_variable_types: false
+    prefer_int_literals: false
+    require_trailing_commas: false
+    avoid_multiple_declarations_per_line: false
+    # Disable new vg cli rules stop
+    sort_constructors_first: true
+    unnecessary_this: true
+    avoid_redundant_argument_values: true
+    prefer_const_declarations: true
+    avoid_relative_lib_imports: true
+    directives_ordering: true
+    unnecessary_new: true
+    slash_for_doc_comments: true
+    test_types_in_equals: true
+    throw_in_finally: true
+    type_init_formals: true
+    cancel_subscriptions: true
+    prefer_final_locals: true
+    use_super_parameters: true
+    prefer_const_constructors_in_immutables: true

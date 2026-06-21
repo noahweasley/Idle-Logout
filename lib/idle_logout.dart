@@ -2,3 +2,4 @@
 library;
 
 export 'src/idle_logout.dart';
+export 'src/params.dart';

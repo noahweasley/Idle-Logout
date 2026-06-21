@@ -23,11 +23,13 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return IdleLogout(
-      pauseThreshold: const Duration(seconds: 15),
-      timeout: const Duration(seconds: 10),
-      isLoggedIn: isLoggedIn,
-      isLockedOut: isLockedOut,
-      lockedOutAction: lockedOutAction,
+      params: Params(
+        pauseThreshold: const Duration(seconds: 15),
+        timeout: const Duration(seconds: 10),
+        isLoggedIn: isLoggedIn,
+        isLockedOut: isLockedOut,
+        lockedOutAction: lockedOutAction,
+      ),
       child: MaterialApp(navigatorKey: navigatorKey, home: const HomeScreen()),
     );
   }
@@ -36,9 +38,7 @@ class _MyAppState extends State<MyApp> {
     debugPrint('User logged out due to inactivity');
     LocalStorage.isLockedOut = true;
 
-    await navigatorKey.currentState?.pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const LockScreen()),
-    );
+    await navigatorKey.currentState?.pushReplacement(MaterialPageRoute<void>(builder: (_) => const LockScreen()));
   }
 
   Future<bool> isLoggedIn() async {

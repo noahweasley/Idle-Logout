@@ -1,6 +1,3 @@
-<p align="center" style="font-size: 4rem;">
-  💤
-</p>
 <h1 align="center">Idle Logout</h1>
 
 <p align="center">
@@ -10,7 +7,7 @@
 </p>
 
 <p align="center">
-A Flutter package for handling automatic user logout after a period of inactivity. Ideal for apps where session security and compliance are important (e.g., banking, healthcare, enterprise apps).
+A Flutter package that automatically that detects user inactivity. Designed for applications that require session security such as  banking, healthcare, enterprise apps.
 </p>
 
 <br/>
@@ -23,10 +20,12 @@ A Flutter package for handling automatic user logout after a period of inactivit
 
 ## Features
 
-- Detects user inactivity.
-- Logs out automatically after a configurable timeout.
-- Resets the timer on user activity.
-- Simple and flexible API.
+- Tracks user inactivity across pointer and keyboard input.
+- Automatically triggers a callback after a configurable timeout.
+- Resets inactivity timer on user interaction.
+- Handles app lifecycle transitions (background/resume).
+- Configurable pause threshold for background duration handling.
+- Lightweight and easy to integrate.
 
 ---
 
@@ -42,7 +41,7 @@ Or manually add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  idle_logout: ^1.0.0+1
+  idle_logout: ^2.0.0
 ```
 
 ---
@@ -54,9 +53,6 @@ dependencies:
 ```dart
 import 'package:flutter/material.dart';
 import 'package:idle_logout/idle_logout.dart';
-
-import '../../screens/home_screen.dart';
-import 'screens/lock_screen.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -70,31 +66,34 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IdleLogout(
-      pauseThreshold: const Duration(seconds: 15),
-      timeout: const Duration(seconds: 10),
-      isLoggedIn: isLoggedIn,
-      isLockedOut: isLockedOut,
-      lockedOutAction: lockedOutAction,
-      child: MaterialApp(navigatorKey: navigatorKey, home: const HomeScreen()),
+      params: Params(
+        timeout: const Duration(seconds: 10),
+        pauseThreshold: const Duration(seconds: 15),
+        isLoggedIn: isLoggedIn,
+        isLockedOut: isLockedOut,
+        lockedOutAction: lockedOutAction,
+      ),
+      child: MaterialApp(
+        navigatorKey: navigatorKey,
+        home: const HomeScreen(),
+      ),
     );
   }
 }
 
 Future<void> lockedOutAction() async {
-  debugPrint('User logged out due to inactivity');
+  debugPrint('User locked due to inactivity');
 
   await navigatorKey.currentState?.pushReplacement(
-    MaterialPageRoute<void>(builder: (_) => const LockScreen()),
+    MaterialPageRoute(builder: (_) => const LockScreen()),
   );
 }
 
 Future<bool> isLoggedIn() async {
-  // write your in-app logic for checking if your app is logged in
   return true;
 }
 
 Future<bool> isLockedOut() async {
-  // write your in-app logic for checking if your app is locked out
   return false;
 }
 
@@ -109,6 +108,16 @@ Future<bool> isLockedOut() async {
 ```dart
 IdleLogout({
   required Widget child,
+  required Params params,
+})
+```
+
+---
+
+### Params
+
+```dart
+Params({
   required Future<bool> Function() isLoggedIn,
   required Future<bool> Function() isLockedOut,
   required Future<void> Function() lockedOutAction,
@@ -119,7 +128,7 @@ IdleLogout({
 
 ---
 
-### Parameters
+### Parameter Details
 
 #### `child`
 
@@ -157,7 +166,7 @@ The maximum amount of time the app may remain in the background before the user 
 - If the app resumes after being paused longer than this duration, `lockedOutAction` is executed immediately.
 - If not provided, this defaults to **30 seconds**.
 
-This helps protect sessions when the app is backgrounded or the device is locked. One of the use cases of this is when dialogs pops up, the app locks immediately if you do not include a delay.
+This helps protect sessions when the app is in background or the device is locked. One of the use cases of this is when dialogs pops up, the app locks immediately if you do not include a delay.
 
 ---
 

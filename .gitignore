@@ -44,3 +44,6 @@ app.*.map.json
 coverage/
 
 !LICENSE
+
+# FVM Version Cache
+.fvm/

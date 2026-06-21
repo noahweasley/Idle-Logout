@@ -8,5 +8,4 @@
     "editor.defaultFormatter": "Dart-Code.dart-code",
     "editor.formatOnSave": false
   },
-  "explorer.excludeGitIgnore": true
 }

@@ -1,3 +1,7 @@
+## 2.0.0
+
+- Introduced `Params` wrapper to group configuration options into a single object
+- Updated `IdleLogout` constructor to accept params instead of multiple named parameters
 
 ## 1.0.0+1
 
@@ -5,11 +9,11 @@
 
 ## 1.0.0
 
-* `isLockedOut()` and  `isLoggedIn()` are now an asynchronus functions, you can still return a result synchronously if you prefer
-* Update documentation
-* Add missing `kDebugMode`
-* Clear unused memory when timer is no longer needed
-* Improve example
+- `isLockedOut()` and `isLoggedIn()` are now an asynchronous functions, you can still return a result synchronously if you prefer
+- Update documentation
+- Add missing `kDebugMode`
+- Clear unused memory when timer is no longer needed
+- Improve example
 
 ## 0.1.4
 

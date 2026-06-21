@@ -1,61 +1,77 @@
 import 'dart:async' show Timer, unawaited;
 
-import 'package:flutter/foundation.dart' show AsyncValueGetter, kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:idle_logout/src/params.dart';
 
 /// {@template idle_logout}
-/// A Flutter widget for handling automatic user logout after inactivity.
+/// A widget that monitors user inactivity and notifies your application when
+/// an idle timeout occurs.
+///
+/// `IdleLogout` listens for user interactions and app lifecycle changes,
+/// tracking how long the user has been inactive.
+///
+/// Activity that resets the idle timer includes:
+/// - Touch and pointer interactions.
+/// - Keyboard input.
+/// - Returning to the app after a short background period.
+///
+/// When the configured [Params.timeout] is reached without activity,
+/// [Params.lockedOutAction] is invoked if:
+/// - [Params.isLoggedIn] returns `true`.
+/// - [Params.isLockedOut] returns `false`.
+///
+/// The widget itself does not perform any locking, logout, navigation,
+/// or authentication-related operations. Instead, it notifies the host
+/// application through [Params.lockedOutAction], allowing the application
+/// to decide what action should be taken.
+///
+/// ## App lifecycle handling
+///
+/// When the app moves to the background (`paused`, `inactive`, or `hidden`),
+/// the idle timer is suspended and the current timestamp is recorded.
+///
+/// When the app returns to the foreground:
+///
+/// - If the time spent away exceeds [Params.pauseThreshold],
+///   [Params.lockedOutAction] is invoked immediately.
+/// - Otherwise, idle monitoring resumes and the timer is restarted.
 ///
 /// ## Example
 ///
 /// ```dart
 /// IdleLogout(
-///   timeout: const Duration(minutes: 5),
-///   isLoggedIn: authService.isLoggedIn,
-///   isLockedOut: authService.isLockedOut,
-///   lockedOutAction: () async {
-///     await authService.logout();
-///     // For example: navigate to login screen
-///     Navigator.of(context).pushReplacementNamed('/login');
-///   },
-///   child: MyHomePage(),
+///   params: Params(
+///     timeout: const Duration(minutes: 5),
+///     isLoggedIn: authService.isLoggedIn,
+///     isLockedOut: authService.isLockedOut,
+///     lockedOutAction: () async {
+///       await authService.lockSession();
+///     },
+///   ),
+///   child: const MyHomePage(),
 /// )
 /// ```
 ///
-/// Place [IdleLogout] high in your widget tree (e.g. above `MaterialApp` or
-/// your main page) to monitor app lifecycle events and reset the idle timer.
+/// ## Placement
+///
+/// Place this widget high in your widget tree so activity throughout the
+/// application can be observed.
 /// {@endtemplate}
 class IdleLogout extends StatefulWidget {
   /// {@macro idle_logout}
   const IdleLogout({
+    required this.params,
     required this.child,
-    required this.isLoggedIn,
-    required this.isLockedOut,
-    required this.lockedOutAction,
-    required this.timeout,
-    this.pauseThreshold,
     super.key,
   });
 
   /// The widget to watch for activity
   final Widget child;
 
-  /// callback to check if we are locked out
-  final AsyncValueGetter<bool> isLockedOut;
-
-  /// callback to check if we are logged in
-  final AsyncValueGetter<bool> isLoggedIn;
-
-  /// action to be performed when we are ready to lock-out the user
-  final AsyncValueGetter<void> lockedOutAction;
-
-  /// duration after which we consider the app paused for too long,
-  /// default is 30 seconds
-  final Duration? pauseThreshold;
-
-  /// timeout
-  final Duration timeout;
+  /// Parameters
+  final Params params;
 
   @override
   State<IdleLogout> createState() => _IdleLogoutState();
@@ -134,11 +150,13 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   @override
   void initState() {
+    final params = widget.params;
+
     super.initState();
-    _pauseThreshold = widget.pauseThreshold ?? const Duration(seconds: 30);
+    _pauseThreshold = params.pauseThreshold ?? const Duration(seconds: 30);
 
     if (kDebugMode) {
-      debugPrint('IdleLogout initialized, timeout = ${widget.timeout}');
+      debugPrint('IdleLogout initialized, timeout = ${params.timeout}');
     }
 
     WidgetsBinding.instance.addObserver(this);
@@ -172,7 +190,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   void _resetTimer() {
     _idleTimer?.cancel();
-    _idleTimer = Timer(widget.timeout, _handleIdle);
+    _idleTimer = Timer(widget.params.timeout, _handleIdle);
 
     if (kDebugMode) {
       debugPrint('Idle timer started/reset at ${DateTime.now()}');
@@ -180,14 +198,16 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   }
 
   Future<void> _handleIdle() async {
+    final params = widget.params;
+
     if (!mounted) return;
 
     if (kDebugMode) {
       debugPrint('Idle handler fired at ${DateTime.now()}');
     }
 
-    final loggedIn = await widget.isLoggedIn();
-    final locked = await widget.isLockedOut();
+    final loggedIn = await params.isLoggedIn();
+    final locked = await params.isLockedOut();
 
     if (loggedIn && !locked) {
       if (kDebugMode) {
@@ -197,7 +217,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
       _stopTimer();
 
       if (mounted) {
-        await widget.lockedOutAction();
+        await params.lockedOutAction();
       }
     } else {
       if (kDebugMode) {

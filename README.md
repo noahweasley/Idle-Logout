@@ -218,10 +218,28 @@ This action is executed only if:
 
 ---
 
+## Contributing
+
+Contributions are welcome. Before opening a pull request, please read the contributing guide:
+
+- [Contributing Guide][contributing_link]
+
+---
+
 ## License
 
 Licensed under the [MIT License][license_link].
 
 ---
 
+## Support
+
+If you find this package useful, please consider supporting it:
+
+- Like the [package on pub.dev](https://pub.dev/packages/multivariate_linear_regression)
+- Star the [GitHub repository](https://github.com/noahweasley/Multivariate-Linear-Regression)
+
+Your support helps improve the project and keeps it actively maintained 😊
+
 [license_link]: https://opensource.org/licenses/MIT
+[contributing_link]: CONTRIBUTING.md

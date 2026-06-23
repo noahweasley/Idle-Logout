@@ -236,8 +236,8 @@ Licensed under the [MIT License][license_link].
 
 If you find this package useful, please consider supporting it:
 
-- Like the [package on pub.dev](https://pub.dev/packages/multivariate_linear_regression)
-- Star the [GitHub repository](https://github.com/noahweasley/Multivariate-Linear-Regression)
+- Like the [package on pub.dev](https://pub.dev/packages/idle_logout)
+- Star the [GitHub repository](https://github.com/noahweasley/idle_logout)
 
 Your support helps improve the project and keeps it actively maintained 😊
 

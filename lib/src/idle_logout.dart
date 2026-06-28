@@ -73,6 +73,10 @@ class IdleLogout extends StatefulWidget {
   /// Parameters
   final Params params;
 
+  /// Internal clock for testing
+  @visibleForTesting
+  static DateTime Function() now = DateTime.now;
+
   @override
   State<IdleLogout> createState() => _IdleLogoutState();
 }
@@ -82,28 +86,29 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   Timer? _idleTimer;
   late final Duration _pauseThreshold;
   DateTime? _pausedAt;
+  late final bool isDebugEnabled;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
-    if (kDebugMode) {
-      debugPrint('Lifecycle changed; $state at ${DateTime.now()}');
+    if (isDebugEnabled) {
+      debugPrint('Lifecycle changed; $state at ${IdleLogout.now()}');
     }
 
     if (state == AppLifecycleState.resumed) {
       if (_pausedAt != null) {
-        final awayFor = DateTime.now().difference(_pausedAt!);
+        final awayFor = IdleLogout.now().difference(_pausedAt!);
 
-        if (kDebugMode) {
+        if (isDebugEnabled) {
           debugPrint('App was away for: $awayFor');
         }
 
         if (awayFor > _pauseThreshold) {
-          if (kDebugMode) debugPrint('Away > $_pauseThreshold; locking user');
+          if (isDebugEnabled) debugPrint('Away > $_pauseThreshold; locking user');
           unawaited(_handleIdle());
         } else {
-          if (kDebugMode) {
+          if (isDebugEnabled) {
             debugPrint('Away < $_pauseThreshold; resume without locking');
           }
 
@@ -119,18 +124,18 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
       AppLifecycleState.inactive,
     ].contains(state)) {
       // Only set the first time we go background
-      _pausedAt ??= DateTime.now();
+      _pausedAt ??= IdleLogout.now();
 
-      if (kDebugMode) {
+      if (isDebugEnabled) {
         debugPrint('App paused/inactive at $_pausedAt');
       }
 
       _idleTimer?.cancel();
     } else if (state == AppLifecycleState.hidden) {
       // Rarely even used, but keep for completeness
-      _pausedAt ??= DateTime.now();
+      _pausedAt ??= IdleLogout.now();
 
-      if (kDebugMode) {
+      if (isDebugEnabled) {
         debugPrint('App hidden at $_pausedAt');
       }
     }
@@ -138,8 +143,8 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    if (kDebugMode) {
-      debugPrint('IdleLogout disposed at ${DateTime.now()}');
+    if (isDebugEnabled) {
+      debugPrint('IdleLogout disposed at ${IdleLogout.now()}');
     }
 
     WidgetsBinding.instance.removeObserver(this);
@@ -151,11 +156,12 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   @override
   void initState() {
     final params = widget.params;
+    isDebugEnabled = kDebugMode && params.debug;
 
     super.initState();
     _pauseThreshold = params.pauseThreshold ?? const Duration(seconds: 30);
 
-    if (kDebugMode) {
+    if (isDebugEnabled) {
       debugPrint('IdleLogout initialized, timeout = ${params.timeout}');
     }
 
@@ -172,7 +178,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
       child: Listener(
         behavior: HitTestBehavior.translucent,
         onPointerDown: (_) {
-          if (kDebugMode) {
+          if (isDebugEnabled) {
             debugPrint('User interacted; reset idle timer');
           }
 
@@ -192,8 +198,8 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     _idleTimer?.cancel();
     _idleTimer = Timer(widget.params.timeout, _handleIdle);
 
-    if (kDebugMode) {
-      debugPrint('Idle timer started/reset at ${DateTime.now()}');
+    if (isDebugEnabled) {
+      debugPrint('Idle timer started/reset at ${IdleLogout.now()}');
     }
   }
 
@@ -202,15 +208,15 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
     if (!mounted) return;
 
-    if (kDebugMode) {
-      debugPrint('Idle handler fired at ${DateTime.now()}');
+    if (isDebugEnabled) {
+      debugPrint('Idle handler fired at ${IdleLogout.now()}');
     }
 
     final loggedIn = await params.isLoggedIn();
     final locked = await params.isLockedOut();
 
     if (loggedIn && !locked) {
-      if (kDebugMode) {
+      if (isDebugEnabled) {
         debugPrint('User logged in and not locked out; locking now...');
       }
 
@@ -220,7 +226,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
         await params.lockedOutAction();
       }
     } else {
-      if (kDebugMode) {
+      if (isDebugEnabled) {
         debugPrint('Either no user logged in or already locked; no action');
       }
     }
@@ -228,7 +234,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent) {
-      if (kDebugMode) {
+      if (isDebugEnabled) {
         debugPrint('Keyboard interaction; reset idle timer');
       }
 

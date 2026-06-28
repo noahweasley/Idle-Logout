@@ -58,45 +58,13 @@ dart analyze
 Run the full test suite:
 
 ```sh
-dart test
+very_good test --coverage
 ```
 
-Run tests with coverage:
+Generate and view coverage:
 
 ```sh
-dart test --coverage=coverage
-```
-
-Generate an LCOV report:
-
-```sh
-dart pub global activate coverage 1.15.0
-
-dart run coverage:format_coverage \
-  --lcov \
-  --in=coverage \
-  --out=coverage/lcov.info \
-  --packages=.dart_tool/package_config.json
-```
-
-Filter external packages from the report:
-
-```sh
-lcov --remove coverage/lcov.info \
-  --ignore-errors unused \
-  '*/.pub-cache/*' \
-  -o coverage/filtered.info
-```
-
-Generate an HTML coverage report:
-
-```sh
-genhtml coverage/filtered.info -o coverage/
-```
-
-Open the report:
-
-```sh
+genhtml coverage/lcov.info -o coverage/
 open coverage/index.html
 ```
 
@@ -122,21 +90,4 @@ Run everything locally before submitting a pull request:
 dart format .
 dart analyze
 dart test
-```
-
-For coverage verification:
-
-```sh
-dart test --coverage=coverage
-
-dart run coverage:format_coverage \
-  --lcov \
-  --in=coverage \
-  --out=coverage/lcov.info \
-  --packages=.dart_tool/package_config.json
-
-lcov --remove coverage/lcov.info \
-  --ignore-errors unused \
-  '*/.pub-cache/*' \
-  -o coverage/filtered.info
 ```

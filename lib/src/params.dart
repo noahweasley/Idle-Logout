@@ -12,6 +12,7 @@ class Params {
     required this.isLockedOut,
     required this.lockedOutAction,
     required this.timeout,
+    this.debug = false,
     this.pauseThreshold,
   });
 
@@ -30,4 +31,7 @@ class Params {
 
   /// timeout
   final Duration timeout;
+
+  /// if debug mode should be enabled
+  final bool debug;
 }

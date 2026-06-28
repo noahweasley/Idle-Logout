@@ -20,12 +20,13 @@ A Flutter package that automatically that detects user inactivity. Designed for 
 
 ## Features
 
-- Tracks user inactivity across pointer and keyboard input.
+- Tracks user inactivity across touch and keyboard input.
 - Automatically triggers a callback after a configurable timeout.
 - Resets inactivity timer on user interaction.
 - Handles app lifecycle transitions (background/resume).
 - Configurable pause threshold for background duration handling.
 - Lightweight and easy to integrate.
+- Does not store anything to device storage, you choose where and what you want to store
 
 ---
 
@@ -82,6 +83,8 @@ class MyApp extends StatelessWidget {
 }
 
 Future<void> lockedOutAction() async {
+  // custom logic that should lock users out from your app.
+  // Note: Also store status of lock in device storage
   debugPrint('User locked due to inactivity');
 
   await navigatorKey.currentState?.pushReplacement(
@@ -90,10 +93,14 @@ Future<void> lockedOutAction() async {
 }
 
 Future<bool> isLoggedIn() async {
+  // custom logic that should returns true/false to determine if user is logged-in.
+  // Note: Prefer storing status in device storage
   return true;
 }
 
 Future<bool> isLockedOut() async {
+  // custom logic that should returns true/false to determine if user is locked-out.
+  // Note: Prefer storing status in device storage
   return false;
 }
 

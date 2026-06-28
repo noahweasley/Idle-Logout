@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-A Flutter package that automatically that detects user inactivity. Designed for applications that require session security such as  banking, healthcare, enterprise apps.
+A Flutter package with inactivity-based logout trigger and a configurable timeout detection. Designed for applications that require session security such as  banking, healthcare, enterprise apps.
 </p>
 
 <br/>
@@ -26,7 +26,7 @@ A Flutter package that automatically that detects user inactivity. Designed for 
 - Handles app lifecycle transitions (background/resume).
 - Configurable pause threshold for background duration handling.
 - Lightweight and easy to integrate.
-- Does not store anything to device storage, you choose where and what you want to store
+- Does not store anything to device storage, you choose where and what you want to store.
 
 ---
 
@@ -130,6 +130,7 @@ Params({
   required Future<void> Function() lockedOutAction,
   required Duration timeout,
   Duration? pauseThreshold,
+  bool debug = false,
 })
 ```
 
@@ -222,6 +223,16 @@ This action is executed only if:
 
 - `isLoggedIn()` returns `true`
 - `isLockedOut()` returns `false`
+
+---
+
+#### `debug`
+
+```dart
+bool debug = false
+```
+
+Set to false by default. Set to true if you want to debug what is happening under the hood
 
 ---
 

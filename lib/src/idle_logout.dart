@@ -34,7 +34,7 @@ import 'package:idle_logout/src/params.dart';
 ///
 /// When the app returns to the foreground:
 ///
-/// - If the time spent away exceeds [Params.pauseThreshold],
+/// - If the time spent away exceeds [Params.backgroundTimeout],
 ///   [Params.lockedOutAction] is invoked immediately.
 /// - Otherwise, idle monitoring resumes and the timer is restarted.
 ///
@@ -86,32 +86,31 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   Timer? _idleTimer;
   late final Duration _pauseThreshold;
   DateTime? _pausedAt;
-  late final bool isDebugEnabled;
+
+  void _log(String message) {
+    final isDebugEnabled = kDebugMode && widget.params.debug;
+
+    if (isDebugEnabled) {
+      debugPrint(message);
+    }
+  }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
-    if (isDebugEnabled) {
-      debugPrint('Lifecycle changed; $state at ${IdleLogout.now()}');
-    }
+    _log('Lifecycle changed; $state at ${IdleLogout.now()}');
 
     if (state == AppLifecycleState.resumed) {
       if (_pausedAt != null) {
         final awayFor = IdleLogout.now().difference(_pausedAt!);
-
-        if (isDebugEnabled) {
-          debugPrint('App was away for: $awayFor');
-        }
+        _log('App was away for: $awayFor');
 
         if (awayFor > _pauseThreshold) {
-          if (isDebugEnabled) debugPrint('Away > $_pauseThreshold; locking user');
+          _log('Away > $_pauseThreshold; locking user');
           unawaited(_handleIdle());
         } else {
-          if (isDebugEnabled) {
-            debugPrint('Away < $_pauseThreshold; resume without locking');
-          }
-
+          _log('Away < $_pauseThreshold; resume without locking');
           _resetTimer();
         }
 
@@ -125,27 +124,19 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     ].contains(state)) {
       // Only set the first time we go background
       _pausedAt ??= IdleLogout.now();
-
-      if (isDebugEnabled) {
-        debugPrint('App paused/inactive at $_pausedAt');
-      }
+      _log('App paused/inactive at $_pausedAt');
 
       _idleTimer?.cancel();
     } else if (state == AppLifecycleState.hidden) {
       // Rarely even used, but keep for completeness
       _pausedAt ??= IdleLogout.now();
-
-      if (isDebugEnabled) {
-        debugPrint('App hidden at $_pausedAt');
-      }
+      _log('App hidden at $_pausedAt');
     }
   }
 
   @override
   void dispose() {
-    if (isDebugEnabled) {
-      debugPrint('IdleLogout disposed at ${IdleLogout.now()}');
-    }
+    _log('IdleLogout disposed at ${IdleLogout.now()}');
 
     WidgetsBinding.instance.removeObserver(this);
     _stopTimer();
@@ -155,15 +146,12 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   @override
   void initState() {
-    final params = widget.params;
-    isDebugEnabled = kDebugMode && params.debug;
-
     super.initState();
-    _pauseThreshold = params.pauseThreshold ?? const Duration(seconds: 30);
 
-    if (isDebugEnabled) {
-      debugPrint('IdleLogout initialized, timeout = ${params.timeout}');
-    }
+    final params = widget.params;
+    _pauseThreshold = params.backgroundTimeout ?? const Duration(seconds: 30);
+
+    _log('IdleLogout initialized, timeout = ${params.timeout}');
 
     WidgetsBinding.instance.addObserver(this);
     _resetTimer();
@@ -178,10 +166,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
       child: Listener(
         behavior: HitTestBehavior.translucent,
         onPointerDown: (_) {
-          if (isDebugEnabled) {
-            debugPrint('User interacted; reset idle timer');
-          }
-
+          _log('User interacted; reset idle timer');
           _resetTimer();
         },
         child: widget.child,
@@ -198,46 +183,33 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     _idleTimer?.cancel();
     _idleTimer = Timer(widget.params.timeout, _handleIdle);
 
-    if (isDebugEnabled) {
-      debugPrint('Idle timer started/reset at ${IdleLogout.now()}');
-    }
+    _log('Idle timer started/reset at ${IdleLogout.now()}');
   }
 
   Future<void> _handleIdle() async {
     final params = widget.params;
-
     if (!mounted) return;
 
-    if (isDebugEnabled) {
-      debugPrint('Idle handler fired at ${IdleLogout.now()}');
-    }
+    _log('Idle handler fired at ${IdleLogout.now()}');
 
     final loggedIn = await params.isLoggedIn();
     final locked = await params.isLockedOut();
 
     if (loggedIn && !locked) {
-      if (isDebugEnabled) {
-        debugPrint('User logged in and not locked out; locking now...');
-      }
-
+      _log('User logged in and not locked out; locking now...');
       _stopTimer();
 
       if (mounted) {
         await params.lockedOutAction();
       }
     } else {
-      if (isDebugEnabled) {
-        debugPrint('Either no user logged in or already locked; no action');
-      }
+      _log('Either no user logged in or already locked; no action');
     }
   }
 
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent) {
-      if (isDebugEnabled) {
-        debugPrint('Keyboard interaction; reset idle timer');
-      }
-
+      _log('Keyboard interaction; reset idle timer');
       _resetTimer();
     }
 

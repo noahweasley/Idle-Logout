@@ -5,6 +5,9 @@ concurrency:
   cancel-in-progress: true
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -23,3 +26,4 @@ jobs:
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/flutter_package.yml@v1
     with:
       flutter_version: "3.35.x"
+      min_coverage: 98

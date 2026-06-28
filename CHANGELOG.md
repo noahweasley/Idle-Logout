@@ -3,6 +3,7 @@
 - Introduced `Params` wrapper to group configuration options into a single object
 - Updated `IdleLogout` constructor to accept params instead of multiple named parameters
 - Add optional `debug` to `Params` to enable debug mode
+- Rename `pauseThreshold` to `backgroundTimeout`
 
 ## 1.0.0+1
 

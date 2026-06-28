@@ -181,7 +181,7 @@ void main() {
           home: IdleLogout(
             params: Params(
               timeout: const Duration(minutes: 5),
-              pauseThreshold: const Duration(seconds: 1),
+              backgroundTimeout: const Duration(seconds: 1),
               isLoggedIn: () async => true,
               isLockedOut: () async => false,
               lockedOutAction: () async => called = true,
@@ -207,7 +207,7 @@ void main() {
       expect(called, isTrue);
     });
 
-    testWidgets('locks immediately when resumed after pause threshold', (tester) async {
+    testWidgets('does not lock when resumed before pause threshold', (tester) async {
       var called = false;
 
       await tester.pumpWidget(
@@ -215,7 +215,7 @@ void main() {
           home: IdleLogout(
             params: Params(
               timeout: const Duration(minutes: 5),
-              pauseThreshold: const Duration(seconds: 1),
+              backgroundTimeout: const Duration(seconds: 5),
               isLoggedIn: () async => true,
               isLockedOut: () async => false,
               lockedOutAction: () async => called = true,
@@ -229,7 +229,7 @@ void main() {
         AppLifecycleState.paused,
       );
 
-      current = current.add(const Duration(seconds: 2));
+      current = current.add(const Duration(seconds: 1));
 
       tester.binding.handleAppLifecycleStateChanged(
         AppLifecycleState.resumed,
@@ -238,7 +238,7 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(called, isTrue);
+      expect(called, isFalse);
     });
 
     testWidgets('dispose removes observer safely', (tester) async {
@@ -259,6 +259,180 @@ void main() {
       await tester.pumpWidget(const SizedBox());
 
       expect(find.byType(IdleLogout), findsNothing);
+    });
+
+    testWidgets('does not lock when resumed without previous pause', (tester) async {
+      var called = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: IdleLogout(
+            params: Params(
+              timeout: const Duration(seconds: 2),
+              isLoggedIn: () async => true,
+              isLockedOut: () async => false,
+              lockedOutAction: () async => called = true,
+            ),
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      );
+
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump();
+
+      expect(called, isFalse);
+
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+
+      expect(called, isTrue);
+    });
+
+    testWidgets('hidden lifecycle resumes without locking before threshold', (tester) async {
+      var called = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: IdleLogout(
+            params: Params(
+              timeout: const Duration(minutes: 5),
+              backgroundTimeout: const Duration(seconds: 5),
+              isLoggedIn: () async => true,
+              isLockedOut: () async => false,
+              lockedOutAction: () async => called = true,
+            ),
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.hidden,
+      );
+
+      current = current.add(const Duration(seconds: 1));
+
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      );
+
+      await tester.pump();
+      await tester.pump();
+
+      expect(called, isFalse);
+    });
+
+    testWidgets('hidden lifecycle locks after threshold', (tester) async {
+      var called = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: IdleLogout(
+            params: Params(
+              timeout: const Duration(minutes: 5),
+              backgroundTimeout: const Duration(seconds: 1),
+              isLoggedIn: () async => true,
+              isLockedOut: () async => false,
+              lockedOutAction: () async => called = true,
+            ),
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.hidden,
+      );
+
+      current = current.add(const Duration(seconds: 2));
+
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      );
+
+      await tester.pump();
+      await tester.pump();
+
+      expect(called, isTrue);
+    });
+
+    testWidgets('inactive lifecycle locks after threshold', (tester) async {
+      var called = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: IdleLogout(
+            params: Params(
+              timeout: const Duration(minutes: 5),
+              backgroundTimeout: const Duration(seconds: 1),
+              isLoggedIn: () async => true,
+              isLockedOut: () async => false,
+              lockedOutAction: () async => called = true,
+            ),
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.inactive,
+      );
+
+      current = current.add(const Duration(seconds: 2));
+
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      );
+
+      await tester.pump();
+      await tester.pump();
+
+      expect(called, isTrue);
+    });
+
+    testWidgets('multiple pause events preserve original pause time', (tester) async {
+      var called = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: IdleLogout(
+            params: Params(
+              timeout: const Duration(minutes: 5),
+              backgroundTimeout: const Duration(seconds: 2),
+              isLoggedIn: () async => true,
+              isLockedOut: () async => false,
+              lockedOutAction: () async => called = true,
+            ),
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.paused,
+      );
+
+      current = current.add(const Duration(seconds: 1));
+
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.inactive,
+      );
+
+      current = current.add(const Duration(seconds: 2));
+
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      );
+
+      await tester.pump();
+      await tester.pump();
+
+      expect(called, isTrue);
     });
   });
 }

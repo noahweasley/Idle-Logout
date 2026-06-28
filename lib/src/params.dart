@@ -13,7 +13,7 @@ class Params {
     required this.lockedOutAction,
     required this.timeout,
     this.debug = false,
-    this.pauseThreshold,
+    this.backgroundTimeout,
   });
 
   /// callback to check if we are locked out
@@ -27,7 +27,7 @@ class Params {
 
   /// duration after which we consider the app paused for too long,
   /// default is 30 seconds
-  final Duration? pauseThreshold;
+  final Duration? backgroundTimeout;
 
   /// timeout
   final Duration timeout;

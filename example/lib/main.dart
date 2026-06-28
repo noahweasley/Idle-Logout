@@ -24,7 +24,8 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return IdleLogout(
       params: Params(
-        pauseThreshold: const Duration(seconds: 15),
+        debug: true,
+        backgroundTimeout: const Duration(seconds: 15),
         timeout: const Duration(seconds: 10),
         isLoggedIn: isLoggedIn,
         isLockedOut: isLockedOut,

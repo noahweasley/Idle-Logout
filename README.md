@@ -4,6 +4,7 @@
   <img src="https://img.shields.io/badge/Dart-≥3.0-blue?logo=dart&logoColor=white" alt="Minimum Dart Version" />
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux-009688?logo=flutter&logoColor=white&color=009688" alt="Platform" />
   <img src="https://img.shields.io/badge/Style-Very%20Good%20CLI-purple?logo=very-good&logoColor=white" alt="Very Good CLI" />
+  <img src="https://img.shields.io/badge/Test%20coverage-98.6%25-green" alt="Test Coverage" />
 </p>
 
 <p align="center">
@@ -69,7 +70,7 @@ class MyApp extends StatelessWidget {
     return IdleLogout(
       params: Params(
         timeout: const Duration(seconds: 10),
-        pauseThreshold: const Duration(seconds: 15),
+        backgroundTimeout: const Duration(seconds: 15),
         isLoggedIn: isLoggedIn,
         isLockedOut: isLockedOut,
         lockedOutAction: lockedOutAction,
@@ -129,7 +130,7 @@ Params({
   required Future<bool> Function() isLockedOut,
   required Future<void> Function() lockedOutAction,
   required Duration timeout,
-  Duration? pauseThreshold,
+  Duration? backgroundTimeout,
   bool debug = false,
 })
 ```
@@ -163,10 +164,10 @@ The duration of inactivity allowed before the user is considered idle.
 
 ---
 
-#### `pauseThreshold`
+#### `backgroundTimeout`
 
 ```dart
-Duration? pauseThreshold
+Duration? backgroundTimeout
 ```
 
 The maximum amount of time the app may remain in the background before the user is automatically logged out on resume.

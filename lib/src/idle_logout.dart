@@ -84,7 +84,7 @@ class IdleLogout extends StatefulWidget {
 class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   final _focusNode = FocusNode();
   Timer? _idleTimer;
-  late final Duration _pauseThreshold;
+  late final Duration _backgroundTimeout;
   DateTime? _pausedAt;
 
   void _log(String message) {
@@ -106,11 +106,11 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
         final awayFor = IdleLogout.now().difference(_pausedAt!);
         _log('App was away for: $awayFor');
 
-        if (awayFor > _pauseThreshold) {
-          _log('Away > $_pauseThreshold; locking user');
+        if (awayFor > _backgroundTimeout) {
+          _log('Away > $_backgroundTimeout; locking user');
           unawaited(_handleIdle());
         } else {
-          _log('Away < $_pauseThreshold; resume without locking');
+          _log('Away < $_backgroundTimeout; resume without locking');
           _resetTimer();
         }
 
@@ -149,7 +149,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     super.initState();
 
     final params = widget.params;
-    _pauseThreshold = params.backgroundTimeout ?? const Duration(seconds: 30);
+    _backgroundTimeout = params.backgroundTimeout ?? const Duration(seconds: 30);
 
     _log('IdleLogout initialized, timeout = ${params.timeout}');
 

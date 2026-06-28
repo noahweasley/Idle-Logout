@@ -29,13 +29,13 @@ class _MyAppState extends State<MyApp> {
         timeout: const Duration(seconds: 10),
         isLoggedIn: isLoggedIn,
         isLockedOut: isLockedOut,
-        lockedOutAction: lockedOutAction,
+        onLockedOut: onLockedOut,
       ),
       child: MaterialApp(navigatorKey: navigatorKey, home: const HomeScreen()),
     );
   }
 
-  Future<void> lockedOutAction() async {
+  Future<void> onLockedOut() async {
     debugPrint('User logged out due to inactivity');
     LocalStorage.isLockedOut = true;
 

@@ -10,7 +10,7 @@ class Params {
   Params({
     required this.isLoggedIn,
     required this.isLockedOut,
-    required this.lockedOutAction,
+    required this.onLockedOut,
     required this.timeout,
     this.debug = false,
     this.backgroundTimeout,
@@ -23,7 +23,7 @@ class Params {
   final AsyncValueGetter<bool> isLoggedIn;
 
   /// action to be performed when we are ready to lock-out the user
-  final AsyncValueGetter<void> lockedOutAction;
+  final AsyncValueGetter<void> onLockedOut;
 
   /// duration after which we consider the app paused for too long,
   /// default is 30 seconds

@@ -73,7 +73,7 @@ class MyApp extends StatelessWidget {
         backgroundTimeout: const Duration(seconds: 15),
         isLoggedIn: isLoggedIn,
         isLockedOut: isLockedOut,
-        lockedOutAction: lockedOutAction,
+        onLockedOut: onLockedOut,
       ),
       child: MaterialApp(
         navigatorKey: navigatorKey,
@@ -83,7 +83,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-Future<void> lockedOutAction() async {
+Future<void> onLockedOut() async {
   // custom logic that should lock users out from your app.
   // Note: Also store status of lock in device storage
   debugPrint('User locked due to inactivity');
@@ -128,7 +128,7 @@ IdleLogout({
 Params({
   required Future<bool> Function() isLoggedIn,
   required Future<bool> Function() isLockedOut,
-  required Future<void> Function() lockedOutAction,
+  required Future<void> Function() onLockedOut,
   required Duration timeout,
   Duration? backgroundTimeout,
   bool debug = false,
@@ -172,7 +172,7 @@ Duration? backgroundTimeout
 
 The maximum amount of time the app may remain in the background before the user is automatically logged out on resume.
 
-- If the app resumes after being paused longer than this duration, `lockedOutAction` is executed immediately.
+- If the app resumes after being paused longer than this duration, `onLockedOut` is executed immediately.
 - If not provided, this defaults to **30 seconds**.
 
 This helps protect sessions when the app is in background or the device is locked. One of the use cases of this is when dialogs pops up, the app locks immediately if you do not include a delay.
@@ -200,15 +200,15 @@ Future<bool> Function() isLockedOut
 
 Indicates whether the user is already logged out or locked.
 
-- Prevents multiple executions of `lockedOutAction`.
+- Prevents multiple executions of `onLockedOut`.
 - Avoids duplicate navigation or logout calls.
 
 ---
 
-#### `lockedOutAction`
+#### `onLockedOut`
 
 ```dart
-Future<void> Function() lockedOutAction
+Future<void> Function() onLockedOut
 ```
 
 The callback executed when the user must be logged out due to inactivity.

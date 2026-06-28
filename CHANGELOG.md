@@ -4,6 +4,7 @@
 - Updated `IdleLogout` constructor to accept params instead of multiple named parameters
 - Add optional `debug` to `Params` to enable debug mode
 - Rename `pauseThreshold` to `backgroundTimeout`
+- Rename `lockedOutAction` to `onLockedOut`
 
 ## 1.0.0+1
 

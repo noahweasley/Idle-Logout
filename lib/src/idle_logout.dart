@@ -18,13 +18,13 @@ import 'package:idle_logout/src/params.dart';
 /// - Returning to the app after a short background period.
 ///
 /// When the configured [Params.timeout] is reached without activity,
-/// [Params.lockedOutAction] is invoked if:
+/// [Params.onLockedOut] is invoked if:
 /// - [Params.isLoggedIn] returns `true`.
 /// - [Params.isLockedOut] returns `false`.
 ///
 /// The widget itself does not perform any locking, logout, navigation,
 /// or authentication-related operations. Instead, it notifies the host
-/// application through [Params.lockedOutAction], allowing the application
+/// application through [Params.onLockedOut], allowing the application
 /// to decide what action should be taken.
 ///
 /// ## App lifecycle handling
@@ -35,7 +35,7 @@ import 'package:idle_logout/src/params.dart';
 /// When the app returns to the foreground:
 ///
 /// - If the time spent away exceeds [Params.backgroundTimeout],
-///   [Params.lockedOutAction] is invoked immediately.
+///   [Params.onLockedOut] is invoked immediately.
 /// - Otherwise, idle monitoring resumes and the timer is restarted.
 ///
 /// ## Example
@@ -46,7 +46,7 @@ import 'package:idle_logout/src/params.dart';
 ///     timeout: const Duration(minutes: 5),
 ///     isLoggedIn: authService.isLoggedIn,
 ///     isLockedOut: authService.isLockedOut,
-///     lockedOutAction: () async {
+///     onLockedOut: () async {
 ///       await authService.lockSession();
 ///     },
 ///   ),
@@ -200,7 +200,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
       _stopTimer();
 
       if (mounted) {
-        await params.lockedOutAction();
+        await params.onLockedOut();
       }
     } else {
       _log('Either no user logged in or already locked; no action');

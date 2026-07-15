@@ -1,3 +1,7 @@
+## 2.0.1
+
+- Explicitly mark `isLoggedIn` and `isLockedOut` with an `AsyncOrBoolGetter` type signifying they can be synchronous or asynchronous.
+
 ## 2.0.0
 
 - Introduced `Params` wrapper to group configuration options into a single object

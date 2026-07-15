@@ -17,10 +17,10 @@ class Params {
   });
 
   /// callback to check if we are locked out
-  final AsyncValueGetter<bool> isLockedOut;
+  final AsyncOrBoolGetter isLockedOut;
 
   /// callback to check if we are logged in
-  final AsyncValueGetter<bool> isLoggedIn;
+  final AsyncOrBoolGetter isLoggedIn;
 
   /// action to be performed when we are ready to lock-out the user
   final AsyncValueGetter<void> onLockedOut;

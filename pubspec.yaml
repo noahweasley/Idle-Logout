@@ -1,6 +1,6 @@
 name: idle_logout
 description: Automatic inactivity-based logout trigger for Flutter applications with configurable timeout detection.
-version: 2.0.0
+version: 2.0.1
 homepage: https://pub.dev/packages/idle_logout
 repository: https://github.com/noahweasley/idle_logout
 

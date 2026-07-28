@@ -13,7 +13,7 @@ A Flutter package with inactivity-based logout trigger and a configurable timeou
 
 <br/>
 
-<p align="start">
+<p align="center">
   <img src="demo/demo.gif" alt="Idle Logout Demo" width="400" />
 </p>
 

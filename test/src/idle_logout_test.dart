@@ -435,4 +435,52 @@ void main() {
       expect(called, isTrue);
     });
   });
+
+  testWidgets('calls callback after timeout when isLoggedIn, isLockedOut and onLockedOut is synchronous', (tester) async {
+    var called = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: IdleLogout(
+          params: Params(
+            timeout: const Duration(seconds: 1),
+            isLoggedIn: () => true,
+            isLockedOut: () => false,
+            onLockedOut: () => called = true,
+          ),
+          child: const SizedBox(),
+        ),
+      ),
+    );
+
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
+
+    expect(called, isTrue);
+  });
+
+  testWidgets(
+    'calls callback after timeout when isLockedOut is not provided',
+    (tester) async {
+      var called = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: IdleLogout(
+            params: Params(
+              timeout: const Duration(seconds: 1),
+              isLoggedIn: () async => true,
+              onLockedOut: () => called = true,
+            ),
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+
+      expect(called, isTrue);
+    },
+  );
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:idle_logout/idle_logout.dart';
 
 /// Configuration parameters for [IdleLogout].
@@ -9,9 +8,9 @@ class Params {
   /// Creates configuration for [IdleLogout].
   Params({
     required this.isLoggedIn,
-    required this.isLockedOut,
     required this.onLockedOut,
     required this.timeout,
+    this.isLockedOut = _defaultIsLockedOut,
     this.debug = false,
     this.backgroundTimeout,
   });
@@ -23,7 +22,7 @@ class Params {
   final AsyncOrBoolGetter isLoggedIn;
 
   /// action to be performed when we are ready to lock-out the user
-  final AsyncValueGetter<void> onLockedOut;
+  final AsyncOrVoid onLockedOut;
 
   /// duration after which we consider the app paused for too long,
   /// default is 30 seconds
@@ -35,3 +34,6 @@ class Params {
   /// if debug mode should be enabled
   final bool debug;
 }
+
+// no lock screen
+bool _defaultIsLockedOut() => false;

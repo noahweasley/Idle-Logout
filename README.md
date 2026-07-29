@@ -27,6 +27,7 @@ A Flutter package with inactivity-based logout trigger and a configurable timeou
 - Handles app lifecycle transitions (background/resume).
 - Configurable pause threshold for background duration handling.
 - Lightweight and easy to integrate.
+- Use with/without a lock screen
 - Does not store anything to device storage, you choose where and what you want to store.
 
 ---
@@ -104,7 +105,6 @@ Future<bool> isLockedOut() async {
   // Note: Prefer storing status in device storage
   return false;
 }
-
 ```
 
 ---
@@ -126,10 +126,10 @@ IdleLogout({
 
 ```dart
 Params({
-  required Future<bool> Function() isLoggedIn,
-  required Future<bool> Function() isLockedOut,
-  required Future<void> Function() onLockedOut,
+  required FutureOr<bool> Function() isLoggedIn,
+  required FutureOr<void> Function() onLockedOut,
   required Duration timeout,
+  FutureOr<bool> Function() isLockedOut,
   Duration? backgroundTimeout,
   bool debug = false,
 })
@@ -182,7 +182,7 @@ This helps protect sessions when the app is in background or the device is locke
 #### `isLoggedIn`
 
 ```dart
-Future<bool> Function() isLoggedIn
+FutureOr<bool> Function() isLoggedIn
 ```
 
 Determines whether idle monitoring should be active.
@@ -195,10 +195,10 @@ Determines whether idle monitoring should be active.
 #### `isLockedOut`
 
 ```dart
-Future<bool> Function() isLockedOut
+FutureOr<bool> Function() isLockedOut
 ```
 
-Indicates whether the user is already logged out or locked.
+Indicates whether the user is already logged out or locked. If not set, it returns false (This is particularly useful if there is no lock screen for your app)
 
 - Prevents multiple executions of `onLockedOut`.
 - Avoids duplicate navigation or logout calls.
@@ -208,7 +208,7 @@ Indicates whether the user is already logged out or locked.
 #### `onLockedOut`
 
 ```dart
-Future<void> Function() onLockedOut
+FutureOr<void> Function() onLockedOut
 ```
 
 The callback executed when the user must be logged out due to inactivity.

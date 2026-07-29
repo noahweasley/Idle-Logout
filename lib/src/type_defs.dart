@@ -5,3 +5,9 @@ import 'dart:async';
 ///
 /// This allows both synchronous and asynchronous implementations.
 typedef AsyncOrBoolGetter = FutureOr<bool> Function();
+
+/// Signature for callbacks that have no arguments and return a [void] or a
+/// [Future<void>].
+///
+/// This allows both synchronous and asynchronous implementations.
+typedef AsyncOrVoid = FutureOr<void> Function();

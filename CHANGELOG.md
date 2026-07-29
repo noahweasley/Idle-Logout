@@ -1,4 +1,4 @@
-## 2.0.1
+## 2.1.0
 
 - Explicitly mark `isLoggedIn` and `isLockedOut` with an `AsyncOrBoolGetter` type signifying they can be synchronous or asynchronous. Also mark `onLockedOut` as `AsyncOrVoid` signifying it can be synchronous or asynchronous.
 - Mark `isLockedOut` optional, defaulting to `false` (useful for applications that do not have a lock-screen state).

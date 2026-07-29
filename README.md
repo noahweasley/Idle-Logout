@@ -44,7 +44,7 @@ Or manually add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  idle_logout: ^2.0.1
+  idle_logout: ^2.1.0
 ```
 
 ---

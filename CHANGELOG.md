@@ -1,3 +1,7 @@
+## 2.2.0
+
+- Add `IdleLogoutController` to better manage activities of the idle timer
+
 ## 2.1.0
 
 - Explicitly mark `isLoggedIn` and `isLockedOut` with an `AsyncOrBoolGetter` type signifying they can be synchronous or asynchronous. Also mark `onLockedOut` as `AsyncOrVoid` signifying it can be synchronous or asynchronous.

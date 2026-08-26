@@ -23,6 +23,7 @@
     "endtemplate",
     "idle_logout",
     "mocktail",
-    "Schyler"
+    "Schyler",
+    "tostring"
   ]
 }

@@ -1,8 +1,10 @@
-import 'dart:async' show Timer, unawaited;
+import 'dart:async' show StreamSubscription, Timer, unawaited;
 
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:idle_logout/src/controller.dart';
+import 'package:idle_logout/src/enums.dart' show IdleLogoutCommand;
 import 'package:idle_logout/src/params.dart';
 
 /// {@template idle_logout}
@@ -41,7 +43,10 @@ import 'package:idle_logout/src/params.dart';
 /// ## Example
 ///
 /// ```dart
+/// final controller = IdleLogoutController();
+///
 /// IdleLogout(
+///   controller: controller,
 ///   params: Params(
 ///     timeout: const Duration(minutes: 5),
 ///     isLoggedIn: authService.isLoggedIn,
@@ -51,7 +56,13 @@ import 'package:idle_logout/src/params.dart';
 ///     },
 ///   ),
 ///   child: const MyHomePage(),
-/// )
+/// );
+///
+/// controller.pause();
+/// controller.start();
+/// controller.resume();
+/// controller.stop();
+/// controller.reset();
 /// ```
 ///
 /// ## Placement
@@ -64,82 +75,69 @@ class IdleLogout extends StatefulWidget {
   const IdleLogout({
     required this.params,
     required this.child,
+    this.controller,
     super.key,
   });
-
-  /// The widget to watch for activity
-  final Widget child;
-
-  /// Parameters
-  final Params params;
 
   /// Internal clock for testing
   @visibleForTesting
   static DateTime Function() now = DateTime.now;
+
+  /// The widget to watch for activity
+  final Widget child;
+
+  /// Optional controller to allow programmatic control of the idle timer.
+  final IdleLogoutController? controller;
+
+  /// Parameters
+  final Params params;
 
   @override
   State<IdleLogout> createState() => _IdleLogoutState();
 }
 
 class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
+  late final IdleLogoutController controller;
+
+  late final Duration _backgroundTimeout;
+  StreamSubscription<IdleLogoutCommand>? _controllerSubscription;
   final _focusNode = FocusNode();
   Timer? _idleTimer;
-  late final Duration _backgroundTimeout;
+  bool _isPaused = false;
+  bool _isStopped = false;
   DateTime? _pausedAt;
-
-  void _log(String message) {
-    final isDebugEnabled = kDebugMode && widget.params.debug;
-
-    if (isDebugEnabled) {
-      debugPrint(message);
-    }
-  }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-
     _log('Lifecycle changed; $state at ${IdleLogout.now()}');
 
-    if (state == AppLifecycleState.resumed) {
-      if (_pausedAt != null) {
-        final awayFor = IdleLogout.now().difference(_pausedAt!);
-        _log('App was away for: $awayFor');
+    switch (state) {
+      case AppLifecycleState.resumed:
+        controller.resume();
 
-        if (awayFor > _backgroundTimeout) {
-          _log('Away > $_backgroundTimeout; locking user');
-          unawaited(_handleIdle());
-        } else {
-          _log('Away < $_backgroundTimeout; resume without locking');
-          _resetTimer();
-        }
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+        controller.pause();
 
-        _pausedAt = null;
-      } else {
-        _resetTimer();
-      }
-    } else if ([
-      AppLifecycleState.paused,
-      AppLifecycleState.inactive,
-    ].contains(state)) {
-      // Only set the first time we go background
-      _pausedAt ??= IdleLogout.now();
-      _log('App paused/inactive at $_pausedAt');
-
-      _idleTimer?.cancel();
-    } else if (state == AppLifecycleState.hidden) {
-      // Rarely even used, but keep for completeness
-      _pausedAt ??= IdleLogout.now();
-      _log('App hidden at $_pausedAt');
+      case AppLifecycleState.detached:
+        break;
     }
   }
 
   @override
   void dispose() {
-    _log('IdleLogout disposed at ${IdleLogout.now()}');
+    _log('disposed at ${IdleLogout.now()}');
 
+    controller.stop();
+    _controllerSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
-    _stopTimer();
+
+    if (_hasOwnController) {
+      controller.dispose();
+    }
+
     _focusNode.dispose();
     super.dispose();
   }
@@ -147,14 +145,12 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-
-    final params = widget.params;
-    _backgroundTimeout = params.backgroundTimeout ?? const Duration(seconds: 30);
-
-    _log('IdleLogout initialized, timeout = ${params.timeout}');
-
+    _backgroundTimeout = widget.params.backgroundTimeout ?? const Duration(seconds: 30);
+    _initController();
     WidgetsBinding.instance.addObserver(this);
-    _resetTimer();
+    _log('IdleLogout initialized; timeout = ${widget.params.timeout}');
+
+    controller.start();
   }
 
   @override
@@ -166,53 +162,146 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
       child: Listener(
         behavior: HitTestBehavior.translucent,
         onPointerDown: (_) {
+          if (_isPaused || _isStopped) return;
           _log('User interacted; reset idle timer');
-          _resetTimer();
+          _onResetTimer();
         },
         child: widget.child,
       ),
     );
   }
 
-  void _stopTimer() {
+  bool get _hasOwnController => widget.controller == null;
+
+  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent) {
+      if (_isPaused || _isStopped) return KeyEventResult.ignored;
+      _log('Keyboard interaction; reset idle timer');
+      _onResetTimer();
+    }
+
+    return KeyEventResult.ignored;
+  }
+
+  void _log(String message) {
+    final isDebugEnabled = kDebugMode && widget.params.debug;
+
+    if (isDebugEnabled) {
+      // ignore: no_runtimetype_tostring
+      debugPrint('[$runtimeType]: $message');
+    }
+  }
+
+  void _initController() {
+    controller = widget.controller ?? IdleLogoutController();
+
+    _controllerSubscription = controller.commandStream.listen((command) {
+      switch (command) {
+        case IdleLogoutCommand.pause:
+          _onPauseTimer();
+
+        case IdleLogoutCommand.start:
+        case IdleLogoutCommand.resume:
+          _onResumeTimer();
+
+        case IdleLogoutCommand.stop:
+          _onStopTimer();
+
+        case IdleLogoutCommand.reset:
+          _onResetTimer();
+      }
+    });
+  }
+
+  void _onPauseTimer() {
+    if (_isPaused || _isStopped) return;
+    _log('paused at ${IdleLogout.now()}');
+
+    _isPaused = true;
+    _pausedAt ??= IdleLogout.now();
+
     _idleTimer?.cancel();
     _idleTimer = null;
   }
 
-  void _resetTimer() {
+  void _onResumeTimer() {
+    if (_isStopped) {
+      return;
+    }
+
+    _log('resumed at ${IdleLogout.now()}');
+
+    if (!_isPaused) {
+      _onResetTimer();
+      return;
+    }
+
+    _isPaused = false;
+
+    if (_pausedAt != null) {
+      final awayFor = IdleLogout.now().difference(_pausedAt!);
+      _pausedAt = null;
+
+      _log('Paused/away for: $awayFor');
+
+      if (awayFor > _backgroundTimeout) {
+        _log('Away > $_backgroundTimeout; locking user');
+        unawaited(_handleIdle());
+        return;
+      }
+    }
+
+    _log('Away <= $_backgroundTimeout; resuming idle timer');
+    _onResetTimer();
+  }
+
+  void _onStopTimer() {
+    _log('stopped at ${IdleLogout.now()}');
+
     _idleTimer?.cancel();
-    _idleTimer = Timer(widget.params.timeout, _handleIdle);
+    _idleTimer = null;
+
+    _isPaused = false;
+    _isStopped = true;
+    _pausedAt = null;
+  }
+
+  void _onResetTimer() {
+    if (_isStopped || _isPaused) {
+      return;
+    }
+
+    _idleTimer?.cancel();
+
+    _idleTimer = Timer(
+      widget.params.timeout,
+      _handleIdle,
+    );
 
     _log('Idle timer started/reset at ${IdleLogout.now()}');
   }
 
   Future<void> _handleIdle() async {
-    final params = widget.params;
     if (!mounted) return;
+    final params = widget.params;
 
     _log('Idle handler fired at ${IdleLogout.now()}');
 
     final loggedIn = await params.isLoggedIn();
     final locked = await params.isLockedOut();
 
+    if (!mounted) return;
+
     if (loggedIn && !locked) {
       _log('User logged in and not locked out; locking now...');
-      _stopTimer();
-
-      if (mounted) {
-        await params.onLockedOut();
-      }
+      controller.stop();
+      await params.onLockedOut();
     } else {
       _log('Either no user logged in or already locked; no action');
-    }
-  }
 
-  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
-    if (event is KeyDownEvent) {
-      _log('Keyboard interaction; reset idle timer');
-      _resetTimer();
+      if (!_isStopped && !_isPaused) {
+        _onResetTimer();
+      }
     }
-
-    return KeyEventResult.ignored;
   }
 }

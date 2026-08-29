@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_logout/idle_logout.dart';
 
 void main() {
-  group('IdleLogout', () {
+  group('IdleLogout without controller', () {
     late DateTime current;
 
     setUp(() {

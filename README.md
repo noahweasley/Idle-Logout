@@ -46,7 +46,7 @@ Or add it manually to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  idle_logout: ^2.1.0
+  idle_logout: ^2.2.0
 ```
 
 ---
@@ -149,8 +149,8 @@ controller.reset();
 
 ### Controller commands
 
-| Command    | Description                                                                |
-| ---------- | -------------------------------------------------------------------------- |
+| Command      | Description                                                                |
+| ------------ | -------------------------------------------------------------------------- |
 | `start()`  | Starts or restarts idle monitoring.                                        |
 | `pause()`  | Pauses the idle timer and records when monitoring was paused.              |
 | `resume()` | Resumes monitoring and checks whether the background timeout was exceeded. |

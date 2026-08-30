@@ -17,3 +17,12 @@ enum IdleLogoutCommand {
   /// Reset the timer.
   reset,
 }
+
+/// Debug modes
+enum Mode {
+  /// info
+  info,
+
+  /// normal
+  normal
+}

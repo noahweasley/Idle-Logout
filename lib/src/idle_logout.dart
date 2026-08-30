@@ -1,11 +1,12 @@
 import 'dart:async' show StreamSubscription, Timer, unawaited;
+import 'dart:developer' show log;
 
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:idle_logout/src/controller.dart';
-import 'package:idle_logout/src/enums.dart' show IdleLogoutCommand;
+import 'package:idle_logout/src/enums.dart' show IdleLogoutCommand, Mode;
 import 'package:idle_logout/src/params.dart';
 
 /// {@template idle_logout}
@@ -104,6 +105,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   StreamSubscription<IdleLogoutCommand>? _controllerSubscription;
   final FocusNode _focusNode = FocusNode();
   Timer? _idleTimer;
+  Timer? pausedTimer;
   bool _isPaused = false;
   bool _isStopped = false;
   DateTime? _pausedAt;
@@ -190,6 +192,8 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
         _pauseTimer();
 
       case IdleLogoutCommand.start:
+        _startTimer();
+
       case IdleLogoutCommand.resume:
         _resumeTimer();
 
@@ -218,7 +222,11 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   }
 
   void _pauseTimer() {
-    if (_isPaused || _isStopped) return;
+    if (_isPaused || _isStopped) {
+      _log('Cannot pause timer because timer is already paused/stopped', mode: Mode.info);
+      return;
+    }
+
     final now = IdleLogout.now();
 
     _isPaused = true;
@@ -227,17 +235,30 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     _log('Paused at $now');
   }
 
-  void _resumeTimer() {
-    final now = IdleLogout.now();
-    _log('Resumed at $now');
-    _isStopped = false;
-
-    if (!_isPaused) {
-      _resetTimer();
+  void _startTimer() {
+    if (_isPaused) {
+      _log('Cannot start a paused timer, please use controller.resume() instead');
       return;
     }
 
+    final now = IdleLogout.now();
+
+    _isStopped = false;
     _isPaused = false;
+    _pausedAt = null;
+
+    _log('Started at $now');
+    _resetTimer();
+  }
+
+  void _resumeTimer() {
+    final now = IdleLogout.now();
+
+    _log('Resumed at $now');
+
+    _isStopped = false;
+    _isPaused = false;
+
     final pausedAt = _pausedAt;
     _pausedAt = null;
 
@@ -248,12 +269,12 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
       if (awayFor > _backgroundTimeout) {
         _log('Away > $_backgroundTimeout; locking user');
         unawaited(_handleIdle());
-
         return;
       }
     }
 
     _log('Away <= $_backgroundTimeout; resuming idle timer');
+    // TODO: fix timer. Timer shouldn't be reset, but resumed from wherever time stopped
     _resetTimer();
   }
 
@@ -311,9 +332,13 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     _stopTimer();
   }
 
-  void _log(String message) {
+  void _log(String message, {Mode mode = Mode.normal}) {
     if (kDebugMode && widget.params.debug) {
-      debugPrint('[IdleLogout]: $message');
+      if (mode == Mode.normal) {
+        debugPrint('[IdleLogout]: $message');
+      } else {
+        log('[IdleLogout]: $message');
+      }
     }
   }
 }

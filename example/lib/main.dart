@@ -23,6 +23,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return IdleLogout(
+      controller: LocalStorage.controller,
       params: Params(
         debug: true,
         backgroundTimeout: const Duration(seconds: 15),

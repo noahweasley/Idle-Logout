@@ -152,7 +152,7 @@ controller.reset();
 | Command      | Description                                                                |
 | ------------ | -------------------------------------------------------------------------- |
 | `start()`  | Starts or restarts idle monitoring.                                        |
-| `pause()`  | Pauses the idle timer and records when monitoring was paused.              |
+| `pause()`  | Pauses the idle timer.                                                     |
 | `resume()` | Resumes monitoring and checks whether the background timeout was exceeded. |
 | `stop()`   | Stops monitoring and cancels the active idle timer.                        |
 | `reset()`  | Cancels the current timer and starts a new idle timeout.                   |

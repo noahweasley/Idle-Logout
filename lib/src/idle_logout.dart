@@ -274,7 +274,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     }
 
     _log('Away <= $_backgroundTimeout; resuming idle timer');
-    // TODO: fix timer. Timer shouldn't be reset, but resumed from wherever time stopped
+    // TODO(noah): fix timer. Timer shouldn't be reset, but resumed from wherever time stopped
     _resetTimer();
   }
 

@@ -136,7 +136,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     _log('Disposed at ${IdleLogout.now()}');
 
     controller.stop();
-    _controllerSubscription?.cancel();
+    unawaited(_controllerSubscription?.cancel());
     _idleTimer?.cancel();
 
     WidgetsBinding.instance.removeObserver(this);

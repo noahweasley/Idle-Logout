@@ -97,6 +97,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
 
+              const SizedBox(height: 12),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    showModalBottomSheet<void>(
+                      context: context,
+                      builder: (context) {
+                        return const SizedBox(
+                          height: 300,
+                          child: Center(
+                            child: Text('Bottom Sheet', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  icon: const Icon(Icons.keyboard_arrow_up),
+                  label: const Text('Show Bottom Sheet'),
+                ),
+              ),
+
               const Spacer(),
             ],
           ),

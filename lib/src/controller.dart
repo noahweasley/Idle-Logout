@@ -43,6 +43,8 @@ class IdleLogoutController {
 
   /// Disposes the controller.
   void dispose() {
-    _commandController.close();
+    unawaited(
+      _commandController.close(),
+    );
   }
 }

@@ -57,7 +57,8 @@ void main() {
       expect(called, isTrue);
     });
 
-    testWidgets('does not call callback when user is logged out', (tester) async {
+    testWidgets('does not call callback when user is logged out',
+        (tester) async {
       var called = false;
 
       await tester.pumpWidget(
@@ -173,7 +174,8 @@ void main() {
       expect(called, isTrue);
     });
 
-    testWidgets('locks immediately when resumed after pause threshold', (tester) async {
+    testWidgets('locks immediately when resumed after pause threshold',
+        (tester) async {
       var called = false;
 
       await tester.pumpWidget(
@@ -207,7 +209,8 @@ void main() {
       expect(called, isTrue);
     });
 
-    testWidgets('does not lock when resumed before pause threshold', (tester) async {
+    testWidgets('does not lock when resumed before pause threshold',
+        (tester) async {
       var called = false;
 
       await tester.pumpWidget(
@@ -261,7 +264,8 @@ void main() {
       expect(find.byType(IdleLogout), findsNothing);
     });
 
-    testWidgets('does not lock when resumed without previous pause', (tester) async {
+    testWidgets('does not lock when resumed without previous pause',
+        (tester) async {
       var called = false;
 
       await tester.pumpWidget(
@@ -293,7 +297,8 @@ void main() {
       expect(called, isTrue);
     });
 
-    testWidgets('hidden lifecycle resumes without locking before threshold', (tester) async {
+    testWidgets('hidden lifecycle resumes without locking before threshold',
+        (tester) async {
       var called = false;
 
       await tester.pumpWidget(
@@ -395,7 +400,8 @@ void main() {
       expect(called, isTrue);
     });
 
-    testWidgets('multiple pause events preserve original pause time', (tester) async {
+    testWidgets('multiple pause events preserve original pause time',
+        (tester) async {
       var called = false;
 
       await tester.pumpWidget(
@@ -436,7 +442,9 @@ void main() {
     });
   });
 
-  testWidgets('calls callback after timeout when isLoggedIn, isLockedOut and onLockedOut is synchronous', (tester) async {
+  testWidgets(
+      'calls callback after timeout when isLoggedIn, isLockedOut and onLockedOut is synchronous',
+      (tester) async {
     var called = false;
 
     await tester.pumpWidget(

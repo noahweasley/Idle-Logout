@@ -81,10 +81,6 @@ class IdleLogout extends StatefulWidget {
     super.key,
   });
 
-  /// Internal clock for testing.
-  @visibleForTesting
-  static DateTime Function() now = DateTime.now;
-
   /// The widget to watch for activity.
   final Widget child;
 
@@ -94,21 +90,50 @@ class IdleLogout extends StatefulWidget {
   /// Configuration parameters.
   final Params params;
 
+  /// Internal clock for testing.
+  @visibleForTesting
+  static DateTime Function() now = DateTime.now;
+
   @override
   State<IdleLogout> createState() => _IdleLogoutState();
 }
 
+/// State responsible for monitoring user activity, application lifecycle
+/// changes, and the idle timeout.
 class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
+  /// Maximum amount of time the application can remain in the background
+  /// before the user is considered inactive.
+  late final Duration backgroundTimeout;
+
+  /// Controller used to receive idle logout commands.
   late final IdleLogoutController controller;
 
-  late final Duration _backgroundTimeout;
-  StreamSubscription<IdleLogoutCommand>? _controllerSubscription;
-  final FocusNode _focusNode = FocusNode();
-  Timer? _idleTimer;
+  /// Subscription to commands emitted by the [IdleLogoutController].
+  StreamSubscription<IdleLogoutCommand>? controllerSubscription;
+
+  /// Timer responsible for triggering the idle callback.
+  Timer? idleTimer;
+
+  /// Whether idle monitoring is currently paused.
+  bool isPaused = false;
+
+  /// Whether idle monitoring has been stopped.
+  bool isStopped = false;
+
+  /// Timestamp recorded when idle monitoring was paused.
+  DateTime? pausedAt;
+
+  /// Timer used when the widget is paused.
   Timer? pausedTimer;
-  bool _isPaused = false;
-  bool _isStopped = false;
-  DateTime? _pausedAt;
+
+  /// Duration remaining on the idle timer.
+  Duration? previousTimeout;
+
+  /// Timestamp at which the current idle timer started.
+  DateTime? timerStartedAt;
+
+  /// Focus node used to listen for keyboard activity.
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -136,8 +161,9 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     _log('Disposed at ${IdleLogout.now()}');
 
     controller.stop();
-    unawaited(_controllerSubscription?.cancel());
-    _idleTimer?.cancel();
+    unawaited(controllerSubscription?.cancel());
+
+    idleTimer?.cancel();
 
     WidgetsBinding.instance.removeObserver(this);
 
@@ -153,9 +179,12 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   void initState() {
     super.initState();
 
-    _backgroundTimeout = widget.params.backgroundTimeout ?? const Duration(seconds: 30);
+    previousTimeout = widget.params.timeout;
+    backgroundTimeout =
+        widget.params.backgroundTimeout ?? const Duration(seconds: 30);
 
     _initializeController();
+
     WidgetsBinding.instance.addObserver(this);
 
     _log('Initialized; timeout = ${widget.params.timeout}');
@@ -177,15 +206,40 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     );
   }
 
+  /// Returns the amount of time remaining on the current idle timer.
+  ///
+  /// If the timer has not started, the previously stored timeout is returned.
+  /// Otherwise, the elapsed time since [timerStartedAt] is subtracted from
+  /// the previously stored timeout.
+  Duration get remainingTime {
+    final startedAt = timerStartedAt;
+
+    if (startedAt == null) {
+      return previousTimeout ?? widget.params.timeout;
+    }
+
+    final elapsed = IdleLogout.now().difference(startedAt);
+    final remaining = (previousTimeout ?? widget.params.timeout) - elapsed;
+
+    if (remaining <= Duration.zero) {
+      return Duration.zero;
+    }
+
+    return remaining;
+  }
+
+  /// Whether the widget created and owns the controller.
   bool get _ownsController => widget.controller == null;
 
+  /// Initializes the controller and listens for commands.
   void _initializeController() {
     controller = widget.controller ?? IdleLogoutController();
-    _controllerSubscription = controller.commandStream.listen(
+    controllerSubscription = controller.commandStream.listen(
       _handleControllerCommand,
     );
   }
 
+  /// Handles commands received from the [IdleLogoutController].
   void _handleControllerCommand(IdleLogoutCommand command) {
     switch (command) {
       case IdleLogoutCommand.pause:
@@ -205,15 +259,17 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     }
   }
 
+  /// Handles pointer interaction by resetting the idle timer.
   void _onPointerDown(PointerDownEvent _) {
-    if (_isPaused) return;
+    if (isPaused) return;
 
     _log('User interacted; resetting idle timer');
     _resetTimer();
   }
 
+  /// Handles keyboard interaction by resetting the idle timer.
   KeyEventResult _onKeyEvent(FocusNode _, KeyEvent event) {
-    if (event is KeyDownEvent && !_isPaused && !_isStopped) {
+    if (event is KeyDownEvent && !isPaused && !isStopped) {
       _log('Keyboard interaction; resetting idle timer');
       _resetTimer();
     }
@@ -221,91 +277,147 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     return KeyEventResult.ignored;
   }
 
+  /// Pauses the idle timer and stores the remaining duration.
   void _pauseTimer() {
-    if (_isPaused || _isStopped) {
-      _log('Cannot pause timer because timer is already paused/stopped', mode: Mode.info);
+    if (isPaused || isStopped) {
+      _log(
+        'Cannot pause timer because timer is already paused/stopped',
+        mode: Mode.info,
+      );
       return;
     }
 
     final now = IdleLogout.now();
+    previousTimeout = remainingTime;
 
-    _isPaused = true;
-    _pausedAt ??= now;
+    isPaused = true;
+    pausedAt ??= now;
     _cancelTimer();
-    _log('Paused at $now');
+
+    _log('Paused at $now; remaining timeout = $previousTimeout');
   }
 
+  /// Starts idle monitoring from the configured timeout.
   void _startTimer() {
-    if (_isPaused) {
-      _log('Cannot start a paused timer, please use controller.resume() instead');
+    if (isPaused) {
+      _log(
+        'Cannot start a paused timer, please use controller.resume() instead',
+      );
       return;
     }
 
     final now = IdleLogout.now();
 
-    _isStopped = false;
-    _isPaused = false;
-    _pausedAt = null;
+    isStopped = false;
+    isPaused = false;
+    pausedAt = null;
 
     _log('Started at $now');
     _resetTimer();
   }
 
+  /// Resumes idle monitoring after the application returns to the foreground.
+  ///
+  /// If the application has been away longer than [backgroundTimeout], the
+  /// idle handler is invoked immediately. Otherwise, the previously remaining
+  /// idle duration is restored.
   void _resumeTimer() {
     final now = IdleLogout.now();
 
     _log('Resumed at $now');
 
-    _isStopped = false;
-    _isPaused = false;
+    isStopped = false;
+    isPaused = false;
 
-    final pausedAt = _pausedAt;
-    _pausedAt = null;
+    final pausedAt = this.pausedAt;
+    this.pausedAt = null;
 
     if (pausedAt != null) {
       final awayFor = now.difference(pausedAt);
       _log('Paused/away for: $awayFor');
 
-      if (awayFor > _backgroundTimeout) {
-        _log('Away > $_backgroundTimeout; locking user');
+      if (awayFor > backgroundTimeout) {
+        _log('Away > $backgroundTimeout; locking user');
         unawaited(_handleIdle());
         return;
       }
     }
 
-    _log('Away <= $_backgroundTimeout; resuming idle timer');
-    // TODO(noah): fix timer. Timer shouldn't be reset, but resumed from wherever time stopped
-    _resetTimer();
+    _log(
+      'Away <= $backgroundTimeout; resuming idle timer with '
+      '$previousTimeout remaining',
+    );
+
+    _continueTimer();
   }
 
+  /// Stops idle monitoring and clears the current timer state.
   void _stopTimer() {
     final now = IdleLogout.now();
 
     _cancelTimer();
 
-    _isPaused = false;
-    _isStopped = true;
-    _pausedAt = null;
+    isPaused = false;
+    isStopped = true;
+    pausedAt = null;
+    timerStartedAt = null;
+    previousTimeout = null;
 
     _log('Stopped at $now');
   }
 
+  /// Resets the idle timer to the full configured timeout.
   void _resetTimer() {
     _cancelTimer();
 
-    _idleTimer = Timer(
+    previousTimeout = widget.params.timeout;
+    timerStartedAt = IdleLogout.now();
+
+    idleTimer = Timer(
       widget.params.timeout,
       _handleIdle,
     );
 
-    _log('Timer started/reset at ${IdleLogout.now()}');
+    _log(
+      'Timer started/reset at $timerStartedAt; '
+      'timeout = ${widget.params.timeout}',
+    );
   }
 
+  /// Continues the idle timer using the previously remaining duration.
+  void _continueTimer() {
+    _cancelTimer();
+
+    final timeout = previousTimeout ?? widget.params.timeout;
+
+    if (timeout <= Duration.zero) {
+      unawaited(_handleIdle());
+      return;
+    }
+
+    timerStartedAt = IdleLogout.now();
+
+    idleTimer = Timer(
+      timeout,
+      _handleIdle,
+    );
+
+    _log(
+      'Timer continued at $timerStartedAt; '
+      'remaining timeout = $timeout',
+    );
+  }
+
+  /// Cancels the active idle timer.
   void _cancelTimer() {
-    _idleTimer?.cancel();
-    _idleTimer = null;
+    idleTimer?.cancel();
+    idleTimer = null;
   }
 
+  /// Handles an idle timeout.
+  ///
+  /// The user is locked out only when the user is logged in and is not
+  /// already locked out.
   Future<void> _handleIdle() async {
     if (!mounted) return;
 
@@ -332,6 +444,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     _stopTimer();
   }
 
+  /// Logs diagnostic information when debugging is enabled.
   void _log(String message, {Mode mode = Mode.normal}) {
     if (kDebugMode && widget.params.debug) {
       if (mode == Mode.normal) {

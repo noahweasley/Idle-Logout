@@ -11,7 +11,8 @@ class IdleLogoutController {
   /// Creates an [IdleLogoutController].
   IdleLogoutController();
 
-  final _commandController = StreamController<IdleLogoutCommand>.broadcast(sync: true);
+  final _commandController =
+      StreamController<IdleLogoutCommand>.broadcast(sync: true);
 
   /// Stream of commands sent to [IdleLogout].
   Stream<IdleLogoutCommand> get commandStream => _commandController.stream;

@@ -28,8 +28,8 @@ import 'package:idle_logout/src/params.dart';
 ///
 /// The widget itself does not perform any locking, logout, navigation,
 /// or authentication-related operations. Instead, it notifies the host
-/// application through [Params.onLockedOut], allowing the application
-/// to decide what action should be taken.
+/// application through [Params.onLockedOut], allowing the application to
+/// decide what action should be taken.
 ///
 /// ## App lifecycle handling
 ///
@@ -40,7 +40,8 @@ import 'package:idle_logout/src/params.dart';
 ///
 /// - If the time spent away exceeds [Params.backgroundTimeout],
 ///   [Params.onLockedOut] is invoked immediately.
-/// - Otherwise, idle monitoring resumes and the timer is restarted.
+/// - Otherwise, idle monitoring resumes and the timer continues from the
+///   remaining duration.
 ///
 /// ## Example
 ///
@@ -123,9 +124,6 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   /// Timestamp recorded when idle monitoring was paused.
   DateTime? pausedAt;
 
-  /// Timer used when the widget is paused.
-  Timer? pausedTimer;
-
   /// Duration remaining on the idle timer.
   Duration? previousTimeout;
 
@@ -163,7 +161,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     controller.stop();
     unawaited(controllerSubscription?.cancel());
 
-    idleTimer?.cancel();
+    _cancelTimer();
 
     WidgetsBinding.instance.removeObserver(this);
 
@@ -208,9 +206,8 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   /// Returns the amount of time remaining on the current idle timer.
   ///
-  /// If the timer has not started, the previously stored timeout is returned.
-  /// Otherwise, the elapsed time since [timerStartedAt] is subtracted from
-  /// the previously stored timeout.
+  /// The remaining duration is calculated from the timestamp at which the
+  /// current timer started.
   Duration get remainingTime {
     final startedAt = timerStartedAt;
 
@@ -234,6 +231,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   /// Initializes the controller and listens for commands.
   void _initializeController() {
     controller = widget.controller ?? IdleLogoutController();
+
     controllerSubscription = controller.commandStream.listen(
       _handleControllerCommand,
     );
@@ -261,7 +259,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   /// Handles pointer interaction by resetting the idle timer.
   void _onPointerDown(PointerDownEvent _) {
-    if (isPaused) return;
+    if (isPaused || isStopped) return;
 
     _log('User interacted; resetting idle timer');
     _resetTimer();
@@ -288,10 +286,13 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     }
 
     final now = IdleLogout.now();
-    previousTimeout = remainingTime;
+    final remaining = remainingTime;
 
-    isPaused = true;
+    previousTimeout = remaining;
+    timerStartedAt = null;
     pausedAt ??= now;
+    isPaused = true;
+
     _cancelTimer();
 
     _log('Paused at $now; remaining timeout = $previousTimeout');
@@ -334,6 +335,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
     if (pausedAt != null) {
       final awayFor = now.difference(pausedAt);
+
       _log('Paused/away for: $awayFor');
 
       if (awayFor > backgroundTimeout) {
@@ -343,9 +345,11 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
       }
     }
 
+    final timeout = previousTimeout ?? widget.params.timeout;
+
     _log(
       'Away <= $backgroundTimeout; resuming idle timer with '
-      '$previousTimeout remaining',
+      '$timeout remaining',
     );
 
     _continueTimer();

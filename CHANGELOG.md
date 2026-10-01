@@ -1,3 +1,7 @@
+## 2.2.1
+
+- Resume idle timer instead of resetting after previous pause
+
 ## 2.2.0
 
 - Add `IdleLogoutController` to better manage activities of the idle timer

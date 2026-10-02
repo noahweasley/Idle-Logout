@@ -178,6 +178,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     super.initState();
 
     previousTimeout = widget.params.timeout;
+
     backgroundTimeout =
         widget.params.backgroundTimeout ?? const Duration(seconds: 30);
 
@@ -192,6 +193,8 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.params.ignorePointer) return widget.child;
+
     return Focus(
       autofocus: true,
       focusNode: _focusNode,

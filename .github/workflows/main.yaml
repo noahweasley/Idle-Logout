@@ -26,3 +26,11 @@ jobs:
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/flutter_package.yml@v1
     with:
       min_coverage: 99
+
+  # publish:
+  #   needs: build
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   permissions:
+  #     contents: read
+  #     id-token: write
+  #   uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1

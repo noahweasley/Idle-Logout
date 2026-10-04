@@ -149,8 +149,8 @@ controller.reset();
 
 ### Controller commands
 
-| Command      | Description                                                                |
-| ------------ | -------------------------------------------------------------------------- |
+| Command    | Description                                                                |
+| ---------- | -------------------------------------------------------------------------- |
 | `start()`  | Starts or restarts idle monitoring.                                        |
 | `pause()`  | Pauses the idle timer.                                                     |
 | `resume()` | Resumes monitoring and checks whether the background timeout was exceeded. |
@@ -250,6 +250,7 @@ Params({
   required Duration timeout,
   FutureOr<bool> Function()? isLockedOut,
   Duration? backgroundTimeout,
+  bool ignorePointer = false,
   bool debug = false,
 })
 ```
@@ -421,6 +422,28 @@ onLockedOut: () async {
 ```
 
 The package does not perform these actions automatically.
+
+---
+
+### `ignorePointer`
+
+```dart
+bool ignorePointer = false
+```
+
+Disables pointer and keyboard interaction monitoring.
+
+When set to `true`, touch, pointer, mouse, and keyboard events no longer reset the idle timer.
+
+App lifecycle monitoring and idle timeout handling continue to operate normally, so `onLockedOut` is still triggered when the `timeout` elapses or the `backgroundTimeout` is exceeded. You can still restart the timer manually with `controller.reset()`.
+
+Example:
+
+```dart
+ignorePointer: true,
+```
+
+The default is `false`, meaning user interactions reset the idle timer.
 
 ---
 

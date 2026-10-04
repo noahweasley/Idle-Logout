@@ -12,6 +12,7 @@ class Params {
     required this.timeout,
     this.isLockedOut = _defaultIsLockedOut,
     this.debug = false,
+    this.ignorePointer = false,
     this.backgroundTimeout,
   });
 
@@ -33,6 +34,9 @@ class Params {
 
   /// if debug mode should be enabled
   final bool debug;
+
+  /// if pointer events should be ignored entirely
+  final bool ignorePointer;
 }
 
 // no lock screen

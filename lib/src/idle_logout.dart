@@ -21,6 +21,11 @@ import 'package:idle_logout/src/params.dart';
 /// - Keyboard input.
 /// - Returning to the app after a short background period.
 ///
+/// Set [Params.ignorePointer] to `true` to disable pointer and keyboard
+/// interaction monitoring. When enabled, user interactions do not reset the
+/// idle timer, while app lifecycle monitoring and idle timeout handling
+/// continue to operate normally.
+///
 /// When the configured [Params.timeout] is reached without activity,
 /// [Params.onLockedOut] is invoked if:
 /// - [Params.isLoggedIn] returns `true`.
@@ -178,6 +183,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     super.initState();
 
     previousTimeout = widget.params.timeout;
+
     backgroundTimeout =
         widget.params.backgroundTimeout ?? const Duration(seconds: 30);
 
@@ -192,6 +198,8 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.params.ignorePointer) return widget.child;
+
     return Focus(
       autofocus: true,
       focusNode: _focusNode,

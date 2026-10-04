@@ -1,3 +1,7 @@
+## 2.3.0
+
+- Add `ignorePointer` parameter to optionally disable interaction monitoring
+
 ## 2.2.1
 
 - Resume idle timer instead of resetting after previous pause

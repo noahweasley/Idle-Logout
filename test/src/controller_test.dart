@@ -151,6 +151,35 @@ void main() {
       expect(called, isTrue);
     });
 
+    testWidgets('controller start is ignored while paused', (tester) async {
+      var called = false;
+      final controller = IdleLogoutController();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: IdleLogout(
+            controller: controller,
+            params: Params(
+              timeout: const Duration(seconds: 1),
+              isLoggedIn: () async => true,
+              isLockedOut: () async => false,
+              onLockedOut: () async => called = true,
+            ),
+            child: const SizedBox.expand(),
+          ),
+        ),
+      );
+
+      controller.pause();
+      controller.start();
+      await tester.pump();
+
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+
+      expect(called, isFalse);
+    });
+
     testWidgets('controller reset restarts the timer', (tester) async {
       var called = false;
       final controller = IdleLogoutController();
@@ -187,6 +216,41 @@ void main() {
     });
 
     testWidgets(
+      'controller resume locks when paused longer than background timeout',
+      (tester) async {
+        var called = false;
+        final controller = IdleLogoutController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: IdleLogout(
+              controller: controller,
+              params: Params(
+                timeout: const Duration(minutes: 5),
+                backgroundTimeout: const Duration(seconds: 1),
+                isLoggedIn: () async => true,
+                isLockedOut: () async => false,
+                onLockedOut: () async => called = true,
+              ),
+              child: const SizedBox(),
+            ),
+          ),
+        );
+
+        controller.pause();
+
+        current = current.add(const Duration(seconds: 2));
+
+        controller.resume();
+
+        await tester.pump();
+        await tester.pump();
+
+        expect(called, isTrue);
+      },
+    );
+
+    testWidgets(
       'pointer interaction does not reset timer when paused',
       (tester) async {
         var called = false;
@@ -210,6 +274,42 @@ void main() {
         );
 
         controller.pause();
+        await tester.pump();
+
+        await tester.tapAt(const Offset(100, 100));
+        await tester.pump();
+
+        await tester.pump(const Duration(seconds: 3));
+        await tester.pump();
+
+        expect(called, isFalse);
+      },
+    );
+
+    testWidgets(
+      'pointer interaction does not reset timer when stopped',
+      (tester) async {
+        var called = false;
+        final controller = IdleLogoutController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: IdleLogout(
+              controller: controller,
+              params: Params(
+                timeout: const Duration(seconds: 2),
+                isLoggedIn: () async => true,
+                isLockedOut: () async => false,
+                onLockedOut: () async => called = true,
+              ),
+              child: const Scaffold(
+                body: SizedBox.expand(),
+              ),
+            ),
+          ),
+        );
+
+        controller.stop();
         await tester.pump();
 
         await tester.tapAt(const Offset(100, 100));
@@ -258,99 +358,54 @@ void main() {
       },
     );
 
-    testWidgets('pause threshold uses strictly greater than comparison', (
-      tester,
-    ) async {
-      var called = false;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: IdleLogout(
-            params: Params(
-              timeout: const Duration(minutes: 5),
-              backgroundTimeout: const Duration(seconds: 5),
-              isLoggedIn: () async => true,
-              isLockedOut: () async => false,
-              onLockedOut: () async => called = true,
-            ),
-            child: const SizedBox(),
-          ),
-        ),
-      );
-
-      tester.binding.handleAppLifecycleStateChanged(
-        AppLifecycleState.paused,
-      );
-
-      current = current.add(const Duration(seconds: 5));
-
-      tester.binding.handleAppLifecycleStateChanged(
-        AppLifecycleState.resumed,
-      );
-
-      await tester.pump();
-      await tester.pump();
-
-      expect(called, isFalse);
-    });
-
     testWidgets(
-      'resume after background timeout does not restart idle timer',
+      'controller pause on an already paused timer is safe',
       (tester) async {
         var called = false;
+        final controller = IdleLogoutController();
 
         await tester.pumpWidget(
           MaterialApp(
             home: IdleLogout(
+              controller: controller,
               params: Params(
                 timeout: const Duration(seconds: 1),
-                backgroundTimeout: const Duration(seconds: 1),
                 isLoggedIn: () async => true,
                 isLockedOut: () async => false,
                 onLockedOut: () async => called = true,
+                debug: true,
               ),
-              child: const SizedBox(),
+              child: const SizedBox.expand(),
             ),
           ),
         );
 
-        tester.binding.handleAppLifecycleStateChanged(
-          AppLifecycleState.paused,
-        );
-
-        current = current.add(const Duration(seconds: 2));
-
-        tester.binding.handleAppLifecycleStateChanged(
-          AppLifecycleState.resumed,
-        );
-
+        controller.pause();
+        controller.pause();
         await tester.pump();
-        await tester.pump();
-
-        expect(called, isTrue);
-
-        called = false;
 
         await tester.pump(const Duration(seconds: 2));
         await tester.pump();
 
+        expect(tester.takeException(), isNull);
         expect(called, isFalse);
       },
     );
 
     testWidgets(
-      'does not call callback after timeout when widget is disposed',
+      'does not dispose externally provided controller',
       (tester) async {
-        var called = false;
+        final controller = IdleLogoutController();
 
         await tester.pumpWidget(
           MaterialApp(
             home: IdleLogout(
+              controller: controller,
               params: Params(
                 timeout: const Duration(seconds: 1),
                 isLoggedIn: () async => true,
                 isLockedOut: () async => false,
-                onLockedOut: () async => called = true,
+                onLockedOut: () async {},
               ),
               child: const SizedBox(),
             ),
@@ -359,114 +414,58 @@ void main() {
 
         await tester.pumpWidget(const SizedBox());
 
+        expect(() => controller.start(), returnsNormally);
+
+        controller.dispose();
+      },
+    );
+
+    testWidgets(
+      'controller can be reused by a new IdleLogout after dispose',
+      (tester) async {
+        var called = false;
+        final controller = IdleLogoutController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: IdleLogout(
+              controller: controller,
+              params: Params(
+                timeout: const Duration(seconds: 1),
+                isLoggedIn: () async => true,
+                isLockedOut: () async => false,
+                onLockedOut: () async {},
+              ),
+              child: const SizedBox(),
+            ),
+          ),
+        );
+
+        await tester.pumpWidget(const SizedBox());
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: IdleLogout(
+              controller: controller,
+              params: Params(
+                timeout: const Duration(seconds: 1),
+                isLoggedIn: () async => true,
+                isLockedOut: () async => false,
+                onLockedOut: () async => called = true,
+              ),
+              child: const SizedBox(),
+            ),
+          ),
+        );
+
         await tester.pump(const Duration(seconds: 2));
         await tester.pump();
 
-        expect(called, isFalse);
-      },
-    );
-
-    testWidgets(
-      'resume after pause threshold does not lock logged out user',
-      (tester) async {
-        var called = false;
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: IdleLogout(
-              params: Params(
-                timeout: const Duration(minutes: 5),
-                backgroundTimeout: const Duration(seconds: 1),
-                isLoggedIn: () async => false,
-                isLockedOut: () async => false,
-                onLockedOut: () async => called = true,
-              ),
-              child: const SizedBox(),
-            ),
-          ),
-        );
-
-        tester.binding.handleAppLifecycleStateChanged(
-          AppLifecycleState.paused,
-        );
-
-        current = current.add(const Duration(seconds: 2));
-
-        tester.binding.handleAppLifecycleStateChanged(
-          AppLifecycleState.resumed,
-        );
-
-        await tester.pump();
-        await tester.pump();
-
-        expect(called, isFalse);
-      },
-    );
-
-    testWidgets(
-      'resume after pause threshold does not lock already locked user',
-      (tester) async {
-        var called = false;
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: IdleLogout(
-              params: Params(
-                timeout: const Duration(minutes: 5),
-                backgroundTimeout: const Duration(seconds: 1),
-                isLoggedIn: () async => true,
-                isLockedOut: () async => true,
-                onLockedOut: () async => called = true,
-              ),
-              child: const SizedBox(),
-            ),
-          ),
-        );
-
-        tester.binding.handleAppLifecycleStateChanged(
-          AppLifecycleState.paused,
-        );
-
-        current = current.add(const Duration(seconds: 2));
-
-        tester.binding.handleAppLifecycleStateChanged(
-          AppLifecycleState.resumed,
-        );
-
-        await tester.pump();
-        await tester.pump();
-
-        expect(called, isFalse);
-      },
-    );
-
-    testWidgets(
-      'detached lifecycle state does not pause the timer',
-      (tester) async {
-        var called = false;
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: IdleLogout(
-              params: Params(
-                timeout: const Duration(seconds: 2),
-                isLoggedIn: () async => true,
-                isLockedOut: () async => false,
-                onLockedOut: () async => called = true,
-              ),
-              child: const SizedBox(),
-            ),
-          ),
-        );
-
-        tester.binding.handleAppLifecycleStateChanged(
-          AppLifecycleState.detached,
-        );
-
-        await tester.pump(const Duration(seconds: 3));
-        await tester.pump();
-
         expect(called, isTrue);
+
+        await tester.pumpWidget(const SizedBox());
+
+        controller.dispose();
       },
     );
   });

@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Dart-≥3.0-blue?logo=dart&logoColor=white" alt="Minimum Dart Version" />
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux-009688?logo=flutter&logoColor=white&color=009688" alt="Supported Platforms" />
   <img src="https://img.shields.io/badge/Style-Very%20Good%20CLI-purple?logo=very-good&logoColor=white" alt="Very Good CLI" />
-  <img src="https://img.shields.io/badge/Test%20coverage-96%25-green" alt="Test Coverage" />
+  <img src="https://img.shields.io/badge/Test%20coverage-99.5%25-green" alt="Test Coverage" />
 </p>
 
 <p align="center">
@@ -46,7 +46,7 @@ Or add it manually to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  idle_logout: ^2.2.1
+  idle_logout: ^2.3.0
 ```
 
 ---
@@ -149,8 +149,8 @@ controller.reset();
 
 ### Controller commands
 
-| Command      | Description                                                                |
-| ------------ | -------------------------------------------------------------------------- |
+| Command    | Description                                                                |
+| ---------- | -------------------------------------------------------------------------- |
 | `start()`  | Starts or restarts idle monitoring.                                        |
 | `pause()`  | Pauses the idle timer.                                                     |
 | `resume()` | Resumes monitoring and checks whether the background timeout was exceeded. |
@@ -250,6 +250,7 @@ Params({
   required Duration timeout,
   FutureOr<bool> Function()? isLockedOut,
   Duration? backgroundTimeout,
+  bool ignorePointer = false,
   bool debug = false,
 })
 ```
@@ -421,6 +422,28 @@ onLockedOut: () async {
 ```
 
 The package does not perform these actions automatically.
+
+---
+
+### `ignorePointer`
+
+```dart
+bool ignorePointer = false
+```
+
+Disables pointer and keyboard interaction monitoring.
+
+When set to `true`, touch, pointer, mouse, and keyboard events no longer reset the idle timer.
+
+App lifecycle monitoring and idle timeout handling continue to operate normally, so `onLockedOut` is still triggered when the `timeout` elapses or the `backgroundTimeout` is exceeded. You can still restart the timer manually with `controller.reset()`.
+
+Example:
+
+```dart
+ignorePointer: true,
+```
+
+The default is `false`, meaning user interactions reset the idle timer.
 
 ---
 

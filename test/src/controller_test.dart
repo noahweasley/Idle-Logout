@@ -170,8 +170,10 @@ void main() {
         ),
       );
 
-      controller.pause();
-      controller.start();
+      controller
+        ..pause()
+        ..start();
+
       await tester.pump();
 
       await tester.pump(const Duration(seconds: 2));
@@ -380,8 +382,10 @@ void main() {
           ),
         );
 
-        controller.pause();
-        controller.pause();
+        controller
+          ..pause()
+          ..pause();
+
         await tester.pump();
 
         await tester.pump(const Duration(seconds: 2));
@@ -414,7 +418,7 @@ void main() {
 
         await tester.pumpWidget(const SizedBox());
 
-        expect(() => controller.start(), returnsNormally);
+        expect(controller.start, returnsNormally);
 
         controller.dispose();
       },

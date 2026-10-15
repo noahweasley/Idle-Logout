@@ -166,25 +166,6 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   }
 
   @override
-  void dispose() {
-    _log('Disposed at ${IdleLogout.now()}');
-
-    controller.stop();
-    unawaited(controllerSubscription?.cancel());
-
-    _cancelTimer();
-
-    WidgetsBinding.instance.removeObserver(this);
-
-    if (_ownsController) {
-      controller.dispose();
-    }
-
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  @override
   void didUpdateWidget(covariant IdleLogout oldWidget) {
     super.didUpdateWidget(oldWidget);
 
@@ -213,6 +194,25 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     } else if (!isStopped) {
       controller.reset();
     }
+  }
+
+  @override
+  void dispose() {
+    _log('Disposed at ${IdleLogout.now()}');
+
+    controller.stop();
+    unawaited(controllerSubscription?.cancel());
+
+    _cancelTimer();
+
+    WidgetsBinding.instance.removeObserver(this);
+
+    if (_ownsController) {
+      controller.dispose();
+    }
+
+    _focusNode.dispose();
+    super.dispose();
   }
 
   @override

@@ -26,6 +26,10 @@ import 'package:idle_logout/src/params.dart';
 /// idle timer, while app lifecycle monitoring and idle timeout handling
 /// continue to operate normally.
 ///
+/// Set [Params.enabled] to `false` to disable idle monitoring entirely while
+/// keeping the child widget in the tree. Updating this value to `true` starts
+/// monitoring again.
+///
 /// When the configured [Params.timeout] is reached without activity,
 /// [Params.onLockedOut] is invoked if:
 /// - [Params.isLoggedIn] returns `true`.
@@ -142,6 +146,8 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
+    if (!widget.params.enabled) return;
+
     final now = IdleLogout.now();
     _log('Lifecycle changed; $state at $now');
 
@@ -179,6 +185,19 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   }
 
   @override
+  void didUpdateWidget(covariant IdleLogout oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.params.enabled == widget.params.enabled) return;
+
+    if (widget.params.enabled) {
+      controller.start();
+    } else {
+      controller.stop();
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
 
@@ -198,7 +217,9 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.params.ignorePointer) return widget.child;
+    if (!widget.params.enabled || widget.params.ignorePointer) {
+      return widget.child;
+    }
 
     return Focus(
       autofocus: true,
@@ -247,6 +268,8 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   /// Handles commands received from the [IdleLogoutController].
   void _handleControllerCommand(IdleLogoutCommand command) {
+    if (!widget.params.enabled && command != IdleLogoutCommand.stop) return;
+
     switch (command) {
       case IdleLogoutCommand.pause:
         _pauseTimer();
@@ -431,7 +454,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   /// The user is locked out only when the user is logged in and is not
   /// already locked out.
   Future<void> _handleIdle() async {
-    if (!mounted) return;
+    if (!mounted || !widget.params.enabled) return;
 
     final params = widget.params;
 
@@ -440,7 +463,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     final loggedIn = await params.isLoggedIn();
     final locked = await params.isLockedOut();
 
-    if (!mounted) return;
+    if (!mounted || !widget.params.enabled) return;
 
     if (loggedIn && !locked) {
       _log('User logged in and not locked out; locking now...');

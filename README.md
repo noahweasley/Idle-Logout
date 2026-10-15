@@ -46,7 +46,7 @@ Or add it manually to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  idle_logout: ^2.3.0
+  idle_logout: ^2.4.0
 ```
 
 ---
@@ -250,6 +250,7 @@ Params({
   required Duration timeout,
   FutureOr<bool> Function()? isLockedOut,
   Duration? backgroundTimeout,
+  bool enabled = true,
   bool ignorePointer = false,
   bool debug = false,
 })
@@ -291,6 +292,18 @@ IdleLogoutController? controller
 An optional controller that allows idle monitoring to be controlled programmatically.
 
 If no controller is provided, `IdleLogout` creates and manages its own controller.
+
+---
+
+### `enabled`
+
+```dart
+bool enabled = true
+```
+
+Whether idle monitoring is active. Set to `false` to stop timer and activity
+monitoring while keeping the child widget in the tree. Updating it back to
+`true` starts monitoring again.
 
 ---
 

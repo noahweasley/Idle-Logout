@@ -1,3 +1,7 @@
+## 2.4.0
+
+- Add `enabled` parameter to enable or disable idle monitoring
+
 ## 2.3.0
 
 - Add `ignorePointer` parameter to optionally disable interaction monitoring

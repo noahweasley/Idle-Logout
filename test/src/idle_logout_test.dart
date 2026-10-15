@@ -36,6 +36,68 @@ void main() {
       expect(find.text('Hello'), findsOneWidget);
     });
 
+    testWidgets('disabled monitoring does not call callback', (tester) async {
+      var called = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: IdleLogout(
+            params: Params(
+              enabled: false,
+              timeout: const Duration(seconds: 1),
+              isLoggedIn: () async => true,
+              isLockedOut: () async => false,
+              onLockedOut: () async => called = true,
+            ),
+            child: const Text('Hello'),
+          ),
+        ),
+      );
+
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+
+      expect(find.text('Hello'), findsOneWidget);
+      expect(called, isFalse);
+    });
+
+    testWidgets('monitoring can be enabled and disabled dynamically', (
+      tester,
+    ) async {
+      var called = false;
+
+      Widget buildIdleLogout({required bool enabled}) {
+        return MaterialApp(
+          home: IdleLogout(
+            params: Params(
+              enabled: enabled,
+              timeout: const Duration(seconds: 1),
+              isLoggedIn: () async => true,
+              isLockedOut: () async => false,
+              onLockedOut: () async => called = true,
+            ),
+            child: const Text('Hello'),
+          ),
+        );
+      }
+
+      await tester.pumpWidget(buildIdleLogout(enabled: false));
+      await tester.pumpWidget(buildIdleLogout(enabled: true));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpWidget(buildIdleLogout(enabled: false));
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+
+      expect(called, isFalse);
+
+      await tester.pumpWidget(buildIdleLogout(enabled: true));
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+
+      expect(called, isTrue);
+      expect(find.text('Hello'), findsOneWidget);
+    });
+
     testWidgets('calls callback after timeout', (tester) async {
       var called = false;
 

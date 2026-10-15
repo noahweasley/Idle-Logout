@@ -113,7 +113,7 @@ class IdleLogout extends StatefulWidget {
 class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   /// Maximum amount of time the application can remain in the background
   /// before the user is considered inactive.
-  late final Duration backgroundTimeout;
+  late Duration backgroundTimeout;
 
   /// Controller used to receive idle logout commands.
   late final IdleLogoutController controller;
@@ -188,12 +188,30 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   void didUpdateWidget(covariant IdleLogout oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.params.enabled == widget.params.enabled) return;
+    backgroundTimeout =
+        widget.params.backgroundTimeout ?? const Duration(seconds: 30);
 
-    if (widget.params.enabled) {
+    if (!oldWidget.params.enabled && widget.params.enabled) {
       controller.start();
-    } else {
+      return;
+    }
+
+    if (oldWidget.params.enabled && !widget.params.enabled) {
       controller.stop();
+      return;
+    }
+
+    if (!widget.params.enabled ||
+        oldWidget.params.timeout == widget.params.timeout) {
+      return;
+    }
+
+    if (isPaused) {
+      _cancelTimer();
+      previousTimeout = widget.params.timeout;
+      timerStartedAt = null;
+    } else if (!isStopped) {
+      controller.reset();
     }
   }
 
@@ -331,6 +349,13 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   /// Starts idle monitoring from the configured timeout.
   void _startTimer() {
+    if (!widget.params.enabled) {
+      _log(
+        'Timer was disabled, please enable timer',
+      );
+      return;
+    }
+
     if (isPaused) {
       _log(
         'Cannot start a paused timer, please use controller.resume() instead',

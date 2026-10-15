@@ -98,6 +98,88 @@ void main() {
       expect(find.text('Hello'), findsOneWidget);
     });
 
+    testWidgets('updates callbacks and timeout when params change', (
+      tester,
+    ) async {
+      var oldCallbackCalled = false;
+      var newCallbackCalled = false;
+
+      Widget buildIdleLogout({
+        required Duration timeout,
+        required bool isLoggedIn,
+        required AsyncOrVoid onLockedOut,
+      }) {
+        return MaterialApp(
+          home: IdleLogout(
+            params: Params(
+              timeout: timeout,
+              isLoggedIn: () async => isLoggedIn,
+              isLockedOut: () async => false,
+              onLockedOut: onLockedOut,
+            ),
+            child: const Text('Hello'),
+          ),
+        );
+      }
+
+      await tester.pumpWidget(
+        buildIdleLogout(
+          timeout: const Duration(seconds: 5),
+          isLoggedIn: false,
+          onLockedOut: () async => oldCallbackCalled = true,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      await tester.pumpWidget(
+        buildIdleLogout(
+          timeout: const Duration(seconds: 1),
+          isLoggedIn: true,
+          onLockedOut: () async => newCallbackCalled = true,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump();
+
+      expect(oldCallbackCalled, isFalse);
+      expect(newCallbackCalled, isTrue);
+    });
+
+    testWidgets('updates background timeout when params change', (
+      tester,
+    ) async {
+      var called = false;
+
+      Widget buildIdleLogout({required Duration backgroundTimeout}) {
+        return MaterialApp(
+          home: IdleLogout(
+            params: Params(
+              timeout: const Duration(minutes: 5),
+              backgroundTimeout: backgroundTimeout,
+              isLoggedIn: () async => true,
+              isLockedOut: () async => false,
+              onLockedOut: () async => called = true,
+            ),
+            child: const SizedBox(),
+          ),
+        );
+      }
+
+      await tester.pumpWidget(
+        buildIdleLogout(backgroundTimeout: const Duration(seconds: 30)),
+      );
+      await tester.pumpWidget(
+        buildIdleLogout(backgroundTimeout: const Duration(seconds: 1)),
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      current = current.add(const Duration(seconds: 2));
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+
+      expect(called, isTrue);
+    });
+
     testWidgets('calls callback after timeout', (tester) async {
       var called = false;
 

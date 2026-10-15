@@ -25,10 +25,11 @@ class _MyAppState extends State<MyApp> {
     return IdleLogout(
       controller: LocalStorage.controller,
       params: Params(
+        enabled: false,
         ignorePointer: true,
         debug: true,
-        backgroundTimeout: const Duration(seconds: 15),
-        timeout: const Duration(seconds: 10),
+        backgroundTimeout: const Duration(seconds: 30),
+        timeout: const Duration(seconds: 30),
         isLoggedIn: isLoggedIn,
         isLockedOut: isLockedOut,
         onLockedOut: onLockedOut,

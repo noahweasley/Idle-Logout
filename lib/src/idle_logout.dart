@@ -349,13 +349,6 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   /// Starts idle monitoring from the configured timeout.
   void _startTimer() {
-    if (!widget.params.enabled) {
-      _log(
-        'Timer was disabled, please enable timer',
-      );
-      return;
-    }
-
     if (isPaused) {
       _log(
         'Cannot start a paused timer, please use controller.resume() instead',

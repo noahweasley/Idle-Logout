@@ -180,6 +180,54 @@ void main() {
       expect(called, isTrue);
     });
 
+    testWidgets('uses the updated timeout when changed while paused', (
+      tester,
+    ) async {
+      var called = false;
+      final controller = IdleLogoutController();
+
+      Widget buildIdleLogout({required Duration timeout}) {
+        return MaterialApp(
+          home: IdleLogout(
+            controller: controller,
+            params: Params(
+              timeout: timeout,
+              isLoggedIn: () async => true,
+              isLockedOut: () async => false,
+              onLockedOut: () async => called = true,
+            ),
+            child: const SizedBox(),
+          ),
+        );
+      }
+
+      await tester.pumpWidget(
+        buildIdleLogout(timeout: const Duration(seconds: 1)),
+      );
+
+      controller.pause();
+      await tester.pump();
+
+      await tester.pumpWidget(
+        buildIdleLogout(timeout: const Duration(seconds: 4)),
+      );
+
+      controller.resume();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pump();
+
+      expect(called, isFalse);
+
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump();
+
+      expect(called, isTrue);
+
+      await tester.pumpWidget(const SizedBox());
+      controller.dispose();
+    });
+
     testWidgets('calls callback after timeout', (tester) async {
       var called = false;
 

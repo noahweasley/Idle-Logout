@@ -11,6 +11,7 @@ class Params {
     required this.onLockedOut,
     required this.timeout,
     this.isLockedOut = _defaultIsLockedOut,
+    this.enabled = true,
     this.debug = false,
     this.ignorePointer = false,
     this.backgroundTimeout,
@@ -28,6 +29,9 @@ class Params {
   /// duration after which we consider the app paused for too long,
   /// default is 30 seconds
   final Duration? backgroundTimeout;
+
+  /// Whether idle monitoring is enabled.
+  final bool enabled;
 
   /// timeout
   final Duration timeout;

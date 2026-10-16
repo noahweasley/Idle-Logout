@@ -1,3 +1,8 @@
+## 2.4.0
+
+- Add `enabled` parameter to enable or disable idle monitoring
+- Apply updated `Params` values when `IdleLogout` is rebuilt
+
 ## 2.3.0
 
 - Add `ignorePointer` parameter to optionally disable interaction monitoring

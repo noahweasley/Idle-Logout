@@ -26,6 +26,10 @@ import 'package:idle_logout/src/params.dart';
 /// idle timer, while app lifecycle monitoring and idle timeout handling
 /// continue to operate normally.
 ///
+/// Set [Params.enabled] to `false` to disable idle monitoring entirely while
+/// keeping the child widget in the tree. Updating this value to `true` starts
+/// monitoring again.
+///
 /// When the configured [Params.timeout] is reached without activity,
 /// [Params.onLockedOut] is invoked if:
 /// - [Params.isLoggedIn] returns `true`.
@@ -109,7 +113,7 @@ class IdleLogout extends StatefulWidget {
 class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   /// Maximum amount of time the application can remain in the background
   /// before the user is considered inactive.
-  late final Duration backgroundTimeout;
+  late Duration backgroundTimeout;
 
   /// Controller used to receive idle logout commands.
   late final IdleLogoutController controller;
@@ -142,6 +146,8 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
+    if (!widget.params.enabled) return;
+
     final now = IdleLogout.now();
     _log('Lifecycle changed; $state at $now');
 
@@ -156,6 +162,37 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
       case AppLifecycleState.detached:
         break;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant IdleLogout oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    backgroundTimeout =
+        widget.params.backgroundTimeout ?? const Duration(seconds: 30);
+
+    if (!oldWidget.params.enabled && widget.params.enabled) {
+      controller.start();
+      return;
+    }
+
+    if (oldWidget.params.enabled && !widget.params.enabled) {
+      controller.stop();
+      return;
+    }
+
+    if (!widget.params.enabled ||
+        oldWidget.params.timeout == widget.params.timeout) {
+      return;
+    }
+
+    if (isPaused) {
+      _cancelTimer();
+      previousTimeout = widget.params.timeout;
+      timerStartedAt = null;
+    } else if (!isStopped) {
+      controller.reset();
     }
   }
 
@@ -198,7 +235,9 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.params.ignorePointer) return widget.child;
+    if (!widget.params.enabled || widget.params.ignorePointer) {
+      return widget.child;
+    }
 
     return Focus(
       autofocus: true,
@@ -247,6 +286,8 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
 
   /// Handles commands received from the [IdleLogoutController].
   void _handleControllerCommand(IdleLogoutCommand command) {
+    if (!widget.params.enabled && command != IdleLogoutCommand.stop) return;
+
     switch (command) {
       case IdleLogoutCommand.pause:
         _pauseTimer();
@@ -431,7 +472,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
   /// The user is locked out only when the user is logged in and is not
   /// already locked out.
   Future<void> _handleIdle() async {
-    if (!mounted) return;
+    if (!mounted || !widget.params.enabled) return;
 
     final params = widget.params;
 
@@ -440,7 +481,7 @@ class _IdleLogoutState extends State<IdleLogout> with WidgetsBindingObserver {
     final loggedIn = await params.isLoggedIn();
     final locked = await params.isLockedOut();
 
-    if (!mounted) return;
+    if (!mounted || !widget.params.enabled) return;
 
     if (loggedIn && !locked) {
       _log('User logged in and not locked out; locking now...');

@@ -12,28 +12,29 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  @override
   Widget build(BuildContext context) {
-    return IdleLogout(
-      controller: LocalStorage.controller,
-      params: Params(
-        enabled: false,
-        ignorePointer: true,
-        debug: true,
-        backgroundTimeout: const Duration(seconds: 30),
-        timeout: const Duration(seconds: 30),
-        isLoggedIn: isLoggedIn,
-        isLockedOut: isLockedOut,
-        onLockedOut: onLockedOut,
-      ),
+    return ListenableBuilder(
+      listenable: LocalStorage.settings,
+      builder: (context, child) {
+        return IdleLogout(
+          controller: LocalStorage.controller,
+          params: Params(
+            enabled: LocalStorage.settings.enabled,
+            ignorePointer: true,
+            debug: true,
+            backgroundTimeout: const Duration(seconds: 30),
+            timeout: LocalStorage.settings.timeout,
+            isLoggedIn: isLoggedIn,
+            isLockedOut: isLockedOut,
+            onLockedOut: onLockedOut,
+          ),
+          child: child!,
+        );
+      },
       child: MaterialApp(navigatorKey: navigatorKey, home: const HomeScreen()),
     );
   }

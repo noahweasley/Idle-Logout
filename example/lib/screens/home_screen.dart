@@ -18,111 +18,135 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
+        child: ListView(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const Spacer(),
+          children: [
+            FlutterLogo(size: MediaQuery.sizeOf(context).width / 3),
 
-              FlutterLogo(size: MediaQuery.sizeOf(context).width / 3),
+            const SizedBox(height: 32),
 
-              const SizedBox(height: 32),
+            const Text(
+              'Idle Logout Demo',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
 
-              const Text(
-                'Idle Logout Demo',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            const SizedBox(height: 12),
+
+            const Text(
+              'Interact with the screen or type below to reset the idle timer. '
+              'You can also control the timer manually using the buttons.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, height: 1.5, color: Colors.black54),
+            ),
+
+            const SizedBox(height: 32),
+
+            ListenableBuilder(
+              listenable: LocalStorage.settings,
+              builder: (context, _) {
+                final settings = LocalStorage.settings;
+                return Column(
+                  children: [
+                    Text(
+                      'Monitoring: ${settings.enabled ? 'enabled' : 'disabled'}'
+                      ' | Timeout: ${settings.timeout.inSeconds} seconds',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      children: [
+                        OutlinedButton(
+                          onPressed: settings.toggleEnabled,
+                          child: Text(settings.enabled ? 'Disable monitoring' : 'Enable monitoring'),
+                        ),
+                        OutlinedButton(onPressed: settings.toggleTimeout, child: const Text('Change timeout')),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+
+            const SizedBox(height: 24),
+
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'Enter something',
+                hintText: 'Typing resets the idle timer',
+                border: OutlineInputBorder(),
               ),
+            ),
 
-              const SizedBox(height: 12),
+            const SizedBox(height: 32),
 
-              const Text(
-                'Interact with the screen or type below to reset the idle timer. '
-                'You can also control the timer manually using the buttons.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, height: 1.5, color: Colors.black54),
-              ),
-
-              const SizedBox(height: 32),
-
-              const TextField(
-                decoration: InputDecoration(
-                  labelText: 'Enter something',
-                  hintText: 'Typing resets the idle timer',
-                  border: OutlineInputBorder(),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: controller.pause,
+                    icon: const Icon(Icons.pause),
+                    label: const Text('Pause'),
+                  ),
                 ),
-              ),
-
-              const SizedBox(height: 32),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: controller.pause,
-                      icon: const Icon(Icons.pause),
-                      label: const Text('Pause'),
-                    ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: controller.start,
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('Start'),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: controller.start,
-                      icon: const Icon(Icons.play_arrow),
-                      label: const Text('Start'),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: controller.resume,
-                      icon: const Icon(Icons.play_circle_outline),
-                      label: const Text('Resume'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: controller.stop,
-                      icon: const Icon(Icons.stop),
-                      label: const Text('Stop'),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    showModalBottomSheet<void>(
-                      context: context,
-                      builder: (context) {
-                        return const SizedBox(
-                          height: 300,
-                          child: Center(
-                            child: Text('Bottom Sheet', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  icon: const Icon(Icons.keyboard_arrow_up),
-                  label: const Text('Show Bottom Sheet'),
                 ),
-              ),
+              ],
+            ),
 
-              const Spacer(),
-            ],
-          ),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: controller.resume,
+                    icon: const Icon(Icons.play_circle_outline),
+                    label: const Text('Resume'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: controller.stop,
+                    icon: const Icon(Icons.stop),
+                    label: const Text('Stop'),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  showModalBottomSheet<void>(
+                    context: context,
+                    builder: (context) {
+                      return const SizedBox(
+                        height: 300,
+                        child: Center(
+                          child: Text('Bottom Sheet', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                        ),
+                      );
+                    },
+                  );
+                },
+                icon: const Icon(Icons.keyboard_arrow_up),
+                label: const Text('Show Bottom Sheet'),
+              ),
+            ),
+          ],
         ),
       ),
     );

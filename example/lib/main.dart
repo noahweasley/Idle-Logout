@@ -24,7 +24,6 @@ class MyApp extends StatelessWidget {
           controller: LocalStorage.controller,
           params: Params(
             enabled: LocalStorage.settings.enabled,
-            ignorePointer: true,
             debug: true,
             backgroundTimeout: const Duration(seconds: 30),
             timeout: LocalStorage.settings.timeout,

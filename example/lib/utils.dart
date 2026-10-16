@@ -5,7 +5,7 @@ import 'package:idle_logout/idle_logout.dart';
 
 class IdleLogoutSettings extends ChangeNotifier {
   Duration _timeout = const Duration(seconds: 30);
-  bool _enabled = false;
+  bool _enabled = true;
 
   Duration get timeout => _timeout;
   bool get enabled => _enabled;
@@ -22,7 +22,7 @@ class IdleLogoutSettings extends ChangeNotifier {
 
   void reset() {
     _timeout = const Duration(seconds: 30);
-    _enabled = false;
+    _enabled = true;
     notifyListeners();
   }
 }
